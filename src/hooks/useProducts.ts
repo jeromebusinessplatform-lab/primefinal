@@ -1,17 +1,18 @@
 import { useState, useEffect, useCallback } from "react";
-import { collection, onSnapshot, query, doc, addDoc, updateDoc, deleteDoc } from "firebase/firestore";
+import { collection, onSnapshot, query, doc, addDoc, updateDoc, deleteDoc, setDoc, getDoc } from "firebase/firestore";
 import { db } from "../lib/firebase";
 import { INITIAL_CATEGORIES, type Product, type BundleItemConfig } from "@/data/products.ts";
 
 export function useProducts() {
   const [products, setProducts] = useState<Product[]>([]);
-  const [categories, setCategories] = useState<string[]>(INITIAL_CATEGORIES);
+  const [categories, setCategories] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Load products from Firestore
+  // Load products and categories from Firestore
   useEffect(() => {
+    // Products
     const q = query(collection(db, "products"));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
+    const unsubscribeProducts = onSnapshot(q, (snapshot) => {
       const data = snapshot.docs.map((doc) => ({
         _id: doc.id,
         ...doc.data(),
@@ -20,7 +21,22 @@ export function useProducts() {
       setLoading(false);
     });
 
-    return () => unsubscribe();
+    // Categories
+    const categoriesRef = doc(db, "config", "categories");
+    const unsubscribeCategories = onSnapshot(categoriesRef, (docSnap) => {
+        if (docSnap.exists()) {
+            setCategories(docSnap.data().list || INITIAL_CATEGORIES);
+        } else {
+            // Initialize if missing
+            setDoc(categoriesRef, { list: INITIAL_CATEGORIES });
+            setCategories(INITIAL_CATEGORIES);
+        }
+    });
+
+    return () => {
+        unsubscribeProducts();
+        unsubscribeCategories();
+    };
   }, []);
 
   const addProduct = async (newProd: Omit<Product, "_id">) => {
@@ -35,19 +51,44 @@ export function useProducts() {
     await deleteDoc(doc(db, "products", id));
   };
 
-  // Category Management Handlers (Simplified for now - could also move to Firestore)
-  const addCategory = useCallback((newCategory: string) => {
-    // Implement or leave as is if categories are static/local
+  // Category Management Handlers
+  const addCategory = useCallback(async (newCategory: string) => {
+    const trimmed = newCategory.trim();
+    if (!trimmed) return false;
+    
+    const newCategories = [...categories, trimmed];
+    await setDoc(doc(db, "config", "categories"), { list: newCategories });
     return true;
-  }, []);
+  }, [categories]);
 
-  const editCategory = useCallback((oldCategory: string, newCategory: string) => {
-    return true;
-  }, []);
+  const editCategory = useCallback(async (oldCategory: string, newCategory: string) => {
+    const trimmedNew = newCategory.trim();
+    if (!trimmedNew || oldCategory === trimmedNew) return false;
 
-  const removeCategory = useCallback((categoryToRemove: string, fallback = "General") => {
+    const newCategories = categories.map((c) => (c === oldCategory ? trimmedNew : c));
+    await setDoc(doc(db, "config", "categories"), { list: newCategories });
+
+    // Cascade update all products in this category
+    for (const p of products) {
+        if (p.category === oldCategory) {
+            await updateDoc(doc(db, "products", p._id), { category: trimmedNew });
+        }
+    }
     return true;
-  }, []);
+  }, [categories, products]);
+
+  const removeCategory = useCallback(async (categoryToRemove: string, fallback = "General") => {
+    const newCategories = categories.filter((c) => c !== categoryToRemove);
+    await setDoc(doc(db, "config", "categories"), { list: newCategories });
+
+    // Reassign products to fallback
+    for (const p of products) {
+        if (p.category === categoryToRemove) {
+            await updateDoc(doc(db, "products", p._id), { category: fallback });
+        }
+    }
+    return true;
+  }, [categories, products]);
 
   // Helper to compute bundle prices based on included items
   const computeBundlePrice = useCallback(
