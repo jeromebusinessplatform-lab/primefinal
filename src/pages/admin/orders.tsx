@@ -6,8 +6,22 @@ import {
   Eye,
   RefreshCw,
   Trash2,
+  Sparkles,
+  CheckCircle2,
+  AlertTriangle,
+  FileCheck,
+  Copy,
+  Check,
+  ScanLine,
+  CreditCard,
+  Building,
+  ShieldCheck,
+  Upload,
 } from "lucide-react";
 import { useOrders, type CustomerOrder, type OrderStatus } from "@/hooks/useOrders.ts";
+import { ReceiptOcrScanner } from "@/components/ReceiptOcrScanner.tsx";
+import { analyzeReceiptImage } from "@/lib/ocr.ts";
+import type { ReceiptOcrResult } from "@/types/ocr.ts";
 import { toast } from "sonner";
 import { formatCurrency } from "@/lib/utils.ts";
 
@@ -46,10 +60,12 @@ const STATUS_COLORS: Record<OrderStatus, string> = {
 };
 
 export default function AdminOrdersPage() {
-  const { allOrders: orders, updateOrderStatus, deleteOrder } = useOrders();
+  const { allOrders: orders, updateOrderStatus, updateOrderOcr, updateOrderPaymentStatus, deleteOrder } = useOrders();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
   const [selectedOrder, setSelectedOrder] = useState<CustomerOrder | null>(null);
+  const [isScanningOcr, setIsScanningOcr] = useState(false);
+  const [copiedRef, setCopiedRef] = useState(false);
 
   const filteredOrders = useMemo(() => {
     return orders.filter((o) => {
@@ -70,6 +86,42 @@ export default function AdminOrdersPage() {
     if (selectedOrder?._id === orderId) {
       setSelectedOrder((prev) => (prev ? { ...prev, orderStatus: newStatus } : null));
     }
+  };
+
+  const handleAutoConfirmPayment = (order: CustomerOrder) => {
+    updateOrderPaymentStatus(order._id, "CONFIRMED", "PAYMENT_CONFIRMED");
+    toast.success(`Order #${order.orderNumber} payment confirmed via OCR verification!`);
+    if (selectedOrder?._id === order._id) {
+      setSelectedOrder((prev) =>
+        prev ? { ...prev, paymentStatus: "CONFIRMED", orderStatus: "PAYMENT_CONFIRMED" } : null
+      );
+    }
+  };
+
+  const handleScanOrderReceipt = async (order: CustomerOrder, receiptUrl: string) => {
+    setIsScanningOcr(true);
+    try {
+      const result = await analyzeReceiptImage(receiptUrl, {
+        expectedAmount: order.total,
+        expectedReceiver: "PRIME ENTERPRISE PH",
+      });
+      updateOrderOcr(order._id, result, receiptUrl);
+      if (selectedOrder?._id === order._id) {
+        setSelectedOrder((prev) => (prev ? { ...prev, receiptOcrData: result, receiptUrl } : null));
+      }
+      toast.success(`OCR Analyzed: ${result.channel} payment of ${formatCurrency(result.amount)}`);
+    } catch (err: any) {
+      toast.error(err.message || "Failed to scan receipt with Gemini OCR");
+    } finally {
+      setIsScanningOcr(false);
+    }
+  };
+
+  const handleCopyRef = (refNo: string) => {
+    navigator.clipboard.writeText(refNo);
+    setCopiedRef(true);
+    toast.success("Reference number copied");
+    setTimeout(() => setCopiedRef(false), 2000);
   };
 
   const handleUpdateNotes = (orderId: string, notes: string) => {
@@ -197,7 +249,7 @@ export default function AdminOrdersPage() {
               >
                 <div className="flex items-start justify-between">
                   <div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <span
                         className="text-black font-normal text-lg tracking-wider"
                         style={{ fontFamily: "'Roboto Condensed', sans-serif" }}
@@ -212,6 +264,19 @@ export default function AdminOrdersPage() {
                       >
                         {STATUS_LABELS[order.orderStatus]}
                       </span>
+
+                      {/* OCR Status Chip */}
+                      {order.receiptOcrData ? (
+                        <span className="text-[10px] font-mono font-medium px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-300 flex items-center gap-1">
+                          <Sparkles size={10} className="text-emerald-600" />
+                          <span>{order.receiptOcrData.channel} OCR Verified</span>
+                        </span>
+                      ) : order.receiptUrl ? (
+                        <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-300 flex items-center gap-1">
+                          <FileCheck size={10} className="text-amber-600" />
+                          <span>Receipt Attached</span>
+                        </span>
+                      ) : null}
                     </div>
                     <div className="text-neutral-500 text-xs mt-1 font-normal" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
                       {order.receiverName} {order.telegramUsername ? `(@${order.telegramUsername})` : ""}
@@ -289,6 +354,165 @@ export default function AdminOrdersPage() {
                     </option>
                   ))}
                 </select>
+              </div>
+
+              {/* AI Receipt & OCR Intelligence Section */}
+              <div className="space-y-2 pt-2 border-t border-neutral-100">
+                <div className="flex items-center justify-between">
+                  <div className="text-xs font-normal text-neutral-400 uppercase tracking-wider flex items-center gap-1.5" style={{ fontFamily: "'Roboto Condensed', sans-serif" }}>
+                    <Sparkles size={12} className="text-amber-500" /> Payment Slip & OCR Verification
+                  </div>
+                  {selectedOrder.receiptOcrData && (
+                    <span className="text-[10px] bg-emerald-100 text-emerald-800 font-mono px-2 py-0.5 rounded-full font-bold">
+                      {selectedOrder.receiptOcrData.confidenceScore}% Conf.
+                    </span>
+                  )}
+                </div>
+
+                {selectedOrder.receiptOcrData ? (
+                  <div className="bg-neutral-50 rounded-xl p-3 border border-neutral-200 text-xs space-y-2.5" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-black text-sm">
+                        {selectedOrder.receiptOcrData.channel}
+                      </span>
+                      <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${
+                        selectedOrder.receiptOcrData.isAmountMatched ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"
+                      }`}>
+                        {selectedOrder.receiptOcrData.isAmountMatched ? "✓ Amount Matched" : "⚠ Amount Difference"}
+                      </span>
+                    </div>
+
+                    <div className="space-y-1 text-neutral-600 bg-white p-2.5 rounded-lg border border-neutral-200">
+                      <div className="flex justify-between items-center">
+                        <span className="text-neutral-400 text-[11px]">Reference No:</span>
+                        <div className="flex items-center gap-1 font-mono font-bold text-black text-xs">
+                          <span>{selectedOrder.receiptOcrData.referenceNumber}</span>
+                          <button
+                            type="button"
+                            onClick={() => handleCopyRef(selectedOrder.receiptOcrData!.referenceNumber)}
+                            className="text-neutral-400 hover:text-black cursor-pointer p-0.5"
+                            title="Copy Ref"
+                          >
+                            {copiedRef ? <Check size={11} className="text-emerald-600" /> : <Copy size={11} />}
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="flex justify-between">
+                        <span className="text-neutral-400 text-[11px]">Detected Amount:</span>
+                        <span className="font-mono font-bold text-black">
+                          {formatCurrency(selectedOrder.receiptOcrData.amount)}
+                        </span>
+                      </div>
+
+                      {selectedOrder.receiptOcrData.senderName && (
+                        <div className="flex justify-between">
+                          <span className="text-neutral-400 text-[11px]">Sender:</span>
+                          <span className="font-medium text-neutral-800">{selectedOrder.receiptOcrData.senderName}</span>
+                        </div>
+                      )}
+
+                      {selectedOrder.receiptOcrData.receiverName && (
+                        <div className="flex justify-between">
+                          <span className="text-neutral-400 text-[11px]">Merchant / Recipient:</span>
+                          <span className="font-medium text-neutral-800">{selectedOrder.receiptOcrData.receiverName}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Receipt Image Thumbnail if exists */}
+                    {selectedOrder.receiptUrl && (
+                      <div className="flex items-center justify-between gap-2 pt-1">
+                        <a
+                          href={selectedOrder.receiptUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="flex items-center gap-2 group cursor-pointer"
+                        >
+                          <img
+                            src={selectedOrder.receiptUrl}
+                            alt="Receipt"
+                            className="w-10 h-10 rounded-lg object-cover border border-neutral-300 group-hover:opacity-80 transition"
+                          />
+                          <span className="text-[11px] text-neutral-600 group-hover:text-black underline">
+                            View Full Slip
+                          </span>
+                        </a>
+
+                        <button
+                          type="button"
+                          disabled={isScanningOcr}
+                          onClick={() => handleScanOrderReceipt(selectedOrder, selectedOrder.receiptUrl!)}
+                          className="text-[11px] text-neutral-600 hover:text-black bg-white border border-neutral-200 px-2 py-1 rounded-lg flex items-center gap-1 cursor-pointer"
+                        >
+                          <RefreshCw size={10} className={isScanningOcr ? "animate-spin" : ""} />
+                          <span>Re-scan OCR</span>
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Quick Approve Action */}
+                    {selectedOrder.paymentStatus !== "CONFIRMED" && (
+                      <button
+                        type="button"
+                        onClick={() => handleAutoConfirmPayment(selectedOrder)}
+                        className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-normal py-2 rounded-xl text-xs flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs transition"
+                      >
+                        <CheckCircle2 size={13} />
+                        <span>Confirm Payment (OCR Verified)</span>
+                      </button>
+                    )}
+                  </div>
+                ) : selectedOrder.receiptUrl ? (
+                  <div className="bg-neutral-50 rounded-xl p-3 border border-neutral-200 text-xs space-y-2" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
+                    <div className="flex items-center justify-between">
+                      <span className="text-neutral-700">Receipt attached (unparsed)</span>
+                      <a
+                        href={selectedOrder.receiptUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-[11px] text-neutral-500 hover:text-black underline"
+                      >
+                        View Image
+                      </a>
+                    </div>
+
+                    <button
+                      type="button"
+                      disabled={isScanningOcr}
+                      onClick={() => handleScanOrderReceipt(selectedOrder, selectedOrder.receiptUrl!)}
+                      className="w-full bg-black hover:bg-neutral-800 text-white font-normal py-2 rounded-xl text-xs flex items-center justify-center gap-1.5 cursor-pointer transition"
+                    >
+                      <Sparkles size={12} className={isScanningOcr ? "animate-spin text-amber-300" : "text-amber-400"} />
+                      <span>{isScanningOcr ? "Extracting via Gemini OCR..." : "Analyze with Gemini OCR"}</span>
+                    </button>
+                  </div>
+                ) : (
+                  <div className="bg-neutral-50 rounded-xl p-3 border border-dashed border-neutral-200 text-xs text-center space-y-2">
+                    <p className="text-neutral-400 text-[11px]" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
+                      No payment receipt attached by customer.
+                    </p>
+                    <label className="inline-flex items-center gap-1 text-[11px] bg-white border border-neutral-300 text-neutral-700 hover:text-black px-2.5 py-1 rounded-lg cursor-pointer transition">
+                      <Upload size={11} />
+                      <span>Upload Slip to Scan</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={async (e) => {
+                          const file = e.target.files?.[0];
+                          if (!file) return;
+                          const reader = new FileReader();
+                          reader.onload = async () => {
+                            const b64 = reader.result as string;
+                            await handleScanOrderReceipt(selectedOrder, b64);
+                          };
+                          reader.readAsDataURL(file);
+                        }}
+                      />
+                    </label>
+                  </div>
+                )}
               </div>
 
               <div className="space-y-2 pt-2 border-t border-neutral-100">

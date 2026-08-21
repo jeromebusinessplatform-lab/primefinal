@@ -1,6 +1,6 @@
 import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import { useAdmin } from "@/context/AdminContext.tsx";
-import { ShoppingBag, Package, Settings, LogOut, Truck, ArrowLeft } from "lucide-react";
+import { ShoppingBag, Package, Settings, LogOut, Truck, ArrowLeft, ScanLine } from "lucide-react";
 import PrimeLogo from "@/components/PrimeLogo.tsx";
 
 export default function AdminLayout() {
@@ -14,6 +14,7 @@ export default function AdminLayout() {
 
   const navItems = [
     { to: "/admin/orders", icon: ShoppingBag, label: "Orders" },
+    { to: "/admin/ocr", icon: ScanLine, label: "Receipt OCR" },
     { to: "/admin/logistics", icon: Truck, label: "Logistics" },
     { to: "/admin/products", icon: Package, label: "Products" },
     { to: "/admin/settings", icon: Settings, label: "Settings" },

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import type { ReceiptOcrResult } from "@/types/ocr.ts";
 
 export type OrderStatus =
   | "REVIEW"
@@ -50,6 +51,7 @@ export interface CustomerOrder {
   estimatedDispatchTime: string;
   adminNotes?: string;
   receiptUrl?: string;
+  receiptOcrData?: ReceiptOcrResult;
 }
 
 export const INITIAL_ORDERS: CustomerOrder[] = [
@@ -185,6 +187,42 @@ export function useOrders(telegramUserId?: string) {
     );
   };
 
+  const updateOrderOcr = (
+    orderId: string,
+    ocrData: ReceiptOcrResult,
+    receiptUrl?: string
+  ) => {
+    setOrders((prev) =>
+      prev.map((o) =>
+        o._id === orderId
+          ? {
+              ...o,
+              receiptOcrData: ocrData,
+              ...(receiptUrl ? { receiptUrl } : {}),
+            }
+          : o
+      )
+    );
+  };
+
+  const updateOrderPaymentStatus = (
+    orderId: string,
+    paymentStatus: PaymentStatus,
+    orderStatus?: OrderStatus
+  ) => {
+    setOrders((prev) =>
+      prev.map((o) =>
+        o._id === orderId
+          ? {
+              ...o,
+              paymentStatus,
+              ...(orderStatus ? { orderStatus } : {}),
+            }
+          : o
+      )
+    );
+  };
+
   const deleteOrder = (orderId: string) => {
     setOrders((prev) => prev.filter((o) => o._id !== orderId));
   };
@@ -195,6 +233,8 @@ export function useOrders(telegramUserId?: string) {
     loading: false,
     createOrder,
     updateOrderStatus,
+    updateOrderOcr,
+    updateOrderPaymentStatus,
     deleteOrder,
   };
 }

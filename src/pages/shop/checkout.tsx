@@ -28,6 +28,8 @@ import { useOrders } from "@/hooks/useOrders.ts";
 import { useCouriers } from "@/hooks/useCouriers.ts";
 import { useAddressAutocomplete } from "@/hooks/useAddressAutocomplete.ts";
 import { GeoAddressAutocomplete } from "@/components/GeoAddressAutocomplete.tsx";
+import { ReceiptOcrScanner } from "@/components/ReceiptOcrScanner.tsx";
+import type { ReceiptOcrResult } from "@/types/ocr.ts";
 import { formatCurrency } from "@/lib/utils.ts";
 
 type CheckoutStep = 1 | 2 | 3;
@@ -74,6 +76,7 @@ export default function CheckoutPage() {
   const [paymentMethod, setPaymentMethod] = useState<"TELEGRAM_PAY" | "DIRECT_TRANSFER">("TELEGRAM_PAY");
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
   const [receiptPreview, setReceiptPreview] = useState<string | null>(null);
+  const [ocrResult, setOcrResult] = useState<ReceiptOcrResult | null>(null);
 
   // Submission State
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -185,6 +188,7 @@ export default function CheckoutPage() {
         estimatedDispatchTime: routeInfo ? `${routeInfo.durationMinutes} MIN TRANSIT` : "21 MINUTES",
         adminNotes: notes || undefined,
         receiptUrl: receiptPreview || undefined,
+        receiptOcrData: ocrResult || undefined,
       });
 
       clearCart();
@@ -564,53 +568,24 @@ export default function CheckoutPage() {
                 </div>
               )}
 
-              {/* Receipt Attachment Area */}
-              <div className="space-y-1.5 pt-1">
-                <label className="text-[11px] font-normal text-neutral-600 uppercase block" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
-                  Proof of Payment / Transaction Screenshot {paymentMethod === "TELEGRAM_PAY" ? "(Optional)" : "(Recommended)"}
-                </label>
-
-                <div className="border-2 border-dashed border-neutral-200 rounded-xl p-3.5 text-center bg-neutral-50/50 hover:bg-neutral-50 transition-colors relative">
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleFileChange}
-                    className="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-10"
-                  />
-                  {receiptPreview ? (
-                    <div className="flex items-center justify-between gap-2 text-neutral-800">
-                      <div className="flex items-center gap-2 truncate">
-                        <img
-                          src={receiptPreview}
-                          alt="Receipt Preview"
-                          className="w-10 h-10 rounded-lg object-cover border border-neutral-200 shrink-0"
-                        />
-                        <div className="text-left truncate">
-                          <div className="text-xs font-medium text-green-700 flex items-center gap-1">
-                            <CheckCircle2 size={13} /> Receipt Attached
-                          </div>
-                          <div className="text-[11px] text-neutral-500 truncate max-w-[160px]">
-                            {receiptFile?.name || "Image receipt uploaded"}
-                          </div>
-                        </div>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={handleRemoveReceipt}
-                        className="relative z-20 text-neutral-400 hover:text-red-600 p-1.5 rounded-lg hover:bg-neutral-100 cursor-pointer"
-                        title="Remove file"
-                      >
-                        <Trash2 size={15} />
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="flex flex-col items-center justify-center text-neutral-500 font-normal py-1" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
-                      <Upload size={20} className="mb-1 text-neutral-400" />
-                      <span className="text-xs font-normal text-neutral-800">Upload Transaction Slip or QR Screenshot</span>
-                      <span className="text-[10px] text-neutral-400 mt-0.5">JPG, PNG or PDF under 10MB</span>
-                    </div>
-                  )}
-                </div>
+              {/* AI Receipt OCR Scanner & Verification */}
+              <div className="pt-1">
+                <ReceiptOcrScanner
+                  expectedAmount={grandTotal}
+                  expectedReceiver="PRIME ENTERPRISE PH"
+                  initialReceiptUrl={receiptPreview || undefined}
+                  initialOcrResult={ocrResult}
+                  title={`Proof of Payment ${paymentMethod === "TELEGRAM_PAY" ? "(Optional)" : "(Recommended)"}`}
+                  onOcrComplete={(result, previewUri) => {
+                    setOcrResult(result);
+                    setReceiptPreview(previewUri);
+                  }}
+                  onRemoveReceipt={() => {
+                    setOcrResult(null);
+                    setReceiptPreview(null);
+                    setReceiptFile(null);
+                  }}
+                />
               </div>
             </div>
 
@@ -748,14 +723,18 @@ export default function CheckoutPage() {
               <div className="flex items-center justify-between text-xs pt-0.5" style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: "13px" }}>
                 <div>
                   <span className="font-semibold text-black">
-                    {paymentMethod === "TELEGRAM_PAY" ? "Telegram Pay" : "Direct Transfer / GCash / Maya"}
+                    {ocrResult ? `${ocrResult.channel} (${ocrResult.currency} ${ocrResult.amount.toFixed(2)})` : paymentMethod === "TELEGRAM_PAY" ? "Telegram Pay" : "Direct Transfer / GCash / Maya"}
                   </span>
                   <div className="text-neutral-500 text-[11px]">
-                    {paymentMethod === "TELEGRAM_PAY" ? "Instant Telegram Bot Clearing" : "Receipt Verification on Dispatch"}
+                    {ocrResult ? `Ref: ${ocrResult.referenceNumber}` : paymentMethod === "TELEGRAM_PAY" ? "Instant Telegram Bot Clearing" : "Receipt Verification on Dispatch"}
                   </div>
                 </div>
 
-                {receiptPreview ? (
+                {ocrResult ? (
+                  <span className="text-[11px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full font-medium flex items-center gap-1">
+                    <CheckCircle2 size={11} className="text-emerald-700" /> OCR Verified ({ocrResult.confidenceScore}%)
+                  </span>
+                ) : receiptPreview ? (
                   <span className="text-[11px] bg-green-100 text-green-800 px-2 py-0.5 rounded-full font-medium flex items-center gap-1">
                     <FileCheck size={11} /> Attached
                   </span>
