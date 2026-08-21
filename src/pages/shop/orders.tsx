@@ -1,0 +1,173 @@
+import { useTelegram } from "@/context/TelegramContext.tsx";
+import { useOrders, type CustomerOrder } from "@/hooks/useOrders.ts";
+import { Package, Clock, Truck } from "lucide-react";
+import { Link } from "react-router-dom";
+
+const STATUS_LABELS: Record<string, string> = {
+  REVIEW: "Under Review",
+  PAYMENT_CONFIRMED: "Payment Confirmed",
+  START_PACKING: "Packing",
+  READY: "Ready for Pickup",
+  AWAITING_RIDER: "Awaiting Rider",
+  DISPATCHED: "Dispatched",
+  DELIVERED: "Delivered",
+  PAYMENT_FAILED: "Payment Failed",
+  HOLD_ORDER: "On Hold",
+  REQUEST_RESUBMIT: "Resubmit Required",
+  PAYMENT_CLEARED: "Payment Cleared",
+  FINAL_FOLLOW_UP: "Final Follow-up",
+  REJECTED: "Rejected",
+  CANCELLED: "Cancelled",
+};
+
+const STATUS_COLORS: Record<string, string> = {
+  REVIEW: "#f97316",
+  PAYMENT_CONFIRMED: "#22c55e",
+  START_PACKING: "#3b82f6",
+  READY: "#22c55e",
+  AWAITING_RIDER: "#3b82f6",
+  DISPATCHED: "#3b82f6",
+  DELIVERED: "#22c55e",
+  PAYMENT_FAILED: "#ef4444",
+  HOLD_ORDER: "#f97316",
+  REQUEST_RESUBMIT: "#f97316",
+  PAYMENT_CLEARED: "#22c55e",
+  FINAL_FOLLOW_UP: "#f97316",
+  REJECTED: "#ef4444",
+  CANCELLED: "#6b7280",
+};
+
+export default function OrdersPage() {
+  const { customer } = useTelegram();
+  const { orders, loading } = useOrders(customer?.telegramUserId);
+
+  return (
+    <div className="bg-[#f3f4f6] min-h-full pb-10">
+      <div className="bg-white border-b border-neutral-200 px-4 py-3">
+        <h1
+          className="text-black font-normal uppercase text-xl leading-tight"
+          style={{ fontFamily: "'Roboto Condensed', sans-serif" }}
+        >
+          MY ORDERS
+        </h1>
+        <p className="text-xs text-neutral-500 font-normal" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
+          Live order queue & fulfillment tracking
+        </p>
+      </div>
+
+      {loading ? (
+        <div className="p-3 space-y-2.5">
+          {Array.from({ length: 2 }).map((_, i) => (
+            <div key={i} className="bg-white rounded-2xl border border-neutral-200/90 p-3.5 shadow-xs animate-pulse">
+              <div className="flex items-start justify-between mb-2">
+                <div className="w-1/3 h-4 bg-neutral-200 rounded"></div>
+                <div className="w-1/4 h-4 bg-neutral-200 rounded-full"></div>
+              </div>
+              <div className="space-y-2 py-1">
+                <div className="h-3 bg-neutral-100 rounded w-full"></div>
+                <div className="h-3 bg-neutral-100 rounded w-2/3"></div>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : orders.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-20 text-neutral-400 bg-white m-3 rounded-2xl border border-neutral-200 p-8">
+          <Package size={48} className="mb-3 opacity-30" />
+          <p className="font-normal text-neutral-700" style={{ fontFamily: "'Roboto Condensed', sans-serif" }}>
+            No active orders
+          </p>
+          <Link
+            to="/shop"
+            className="mt-4 text-xs bg-black text-white font-normal px-4 py-2 rounded-xl"
+            style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
+          >
+            BROWSE PRODUCTS
+          </Link>
+        </div>
+      ) : (
+        <div className="p-3 space-y-2.5">
+          {orders.map((order: CustomerOrder) => (
+            <div
+              key={order._id}
+              className="bg-white rounded-2xl border border-neutral-200/90 p-3.5 shadow-xs"
+            >
+              <div className="flex items-start justify-between mb-2">
+                <div>
+                  <div
+                    className="text-black font-normal leading-tight"
+                    style={{
+                      fontFamily: "'Roboto Condensed', sans-serif",
+                      fontSize: "17px",
+                      letterSpacing: "0.5px",
+                    }}
+                  >
+                    #{order.orderNumber}
+                  </div>
+                  <div className="text-[11px] text-neutral-400 mt-0.5 font-normal" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
+                    {new Date(order._creationTime).toLocaleDateString("en-US", {
+                      month: "short",
+                      day: "numeric",
+                      year: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </div>
+                </div>
+
+                <span
+                  className="text-[10px] font-normal px-2.5 py-0.5 rounded-full text-white uppercase"
+                  style={{
+                    backgroundColor: STATUS_COLORS[order.orderStatus] ?? "#6b7280",
+                    fontFamily: "'Roboto Condensed', sans-serif",
+                    letterSpacing: "0.5px",
+                  }}
+                >
+                  {STATUS_LABELS[order.orderStatus] ?? order.orderStatus}
+                </span>
+              </div>
+
+              {/* Items summary */}
+              <div className="text-xs text-neutral-700 py-1 space-y-0.5 font-normal" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
+                {order.items.map((it, idx) => (
+                  <div key={idx} className="flex justify-between">
+                    <span className="truncate pr-2 font-normal">
+                      {it.quantity}x {it.productName}
+                    </span>
+                    <span className="font-normal text-neutral-900">${it.subtotal.toFixed(2)}</span>
+                  </div>
+                ))}
+              </div>
+
+              <div className="flex items-center justify-between text-sm mt-2 pt-2 border-t border-neutral-100">
+                <span className="text-xs text-neutral-500 font-normal" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
+                  {order.items.reduce((s, i) => s + i.quantity, 0)} total items
+                </span>
+                <span
+                  className="text-black font-normal"
+                  style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: "18px" }}
+                >
+                  ${order.total.toFixed(2)}
+                </span>
+              </div>
+
+              {!["DELIVERED", "CANCELLED", "REJECTED"].includes(order.orderStatus) && (
+                <div className="mt-2.5 pt-2 border-t border-neutral-100 flex items-center justify-between text-xs text-neutral-600 bg-neutral-50/80 -mx-3.5 -mb-3.5 p-2.5 rounded-b-2xl font-normal" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
+                  <div className="flex items-center gap-1.5 font-normal">
+                    <Clock size={13} className="text-orange-500" />
+                    <span>
+                      Queue #{order.queuePosition} • {order.estimatedWaitingMinutes} min wait
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1.5 font-normal">
+                    <Truck size={13} className="text-blue-500" />
+                    <span>{order.estimatedDispatchTime}</span>
+                  </div>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}

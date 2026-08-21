@@ -1,0 +1,6 @@
+{
+  "name": "PRIME Commerce",
+  "description": "PRIME Commerce shop and admin web application",
+  "requestFramePermissions": ["geolocation"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
