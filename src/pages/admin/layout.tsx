@@ -18,6 +18,7 @@ export default function AdminLayout() {
     { to: "/admin/ocr", icon: ScanLine, label: "Receipt OCR" },
     { to: "/admin/logistics", icon: Truck, label: "Logistics" },
     { to: "/admin/products", icon: Package, label: "Products" },
+    { to: "/admin/courier", icon: Truck, label: "Courier" },
     { to: "/admin/settings", icon: Settings, label: "Settings" },
   ];
 

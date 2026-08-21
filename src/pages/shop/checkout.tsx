@@ -71,10 +71,14 @@ export default function CheckoutPage() {
   } = useAddressAutocomplete("Bonifacio Global City, 5th Avenue, Taguig, Metro Manila");
 
   const [selectedCourierId, setSelectedCourierId] = useState(
-    couriers[0]?._id || "cour-1"
+    couriers[0]?.id || "cour-1"
   );
   const [notes, setNotes] = useState("");
   const MAX_NOTES = 160;
+
+  // State for Payment Method Dialog
+  const [showPaymentPrompt, setShowPaymentPrompt] = useState(false);
+  const [paymentOption, setPaymentOption] = useState<'PAY_AT_CHECKOUT' | 'PAY_UPON_FULFILLMENT' | null>(null);
 
   // Step 2: Payment Details
   const [paymentMethod, setPaymentMethod] = useState<"TELEGRAM_PAY" | "DIRECT_TRANSFER">("TELEGRAM_PAY");
@@ -193,6 +197,7 @@ export default function CheckoutPage() {
         adminNotes: notes || undefined,
         receiptUrl: receiptPreview || undefined,
         receiptOcrData: ocrResult || undefined,
+        deliveryPaymentOption: paymentOption || 'PAY_AT_CHECKOUT',
       });
 
       // Remove only the purchased items, preserving unselected items for future use
@@ -342,158 +347,142 @@ export default function CheckoutPage() {
       <div className="p-3 space-y-3">
         {/* ================= STEP 1: DELIVERY DETAILS ================= */}
         {currentStep === 1 && (
-          <form onSubmit={handleNextFromStep1} className="space-y-3">
-            <div className="bg-white rounded-2xl border border-neutral-200/90 p-4 shadow-xs space-y-3.5">
-              <div className="flex items-center gap-2 text-black font-normal text-sm uppercase pb-2 border-b border-neutral-100">
-                <MapPin size={16} className="text-neutral-800" />
-                <span style={{ fontFamily: "'Roboto Condensed', sans-serif" }}>Delivery & Contact Information</span>
-              </div>
-
-              <div className="space-y-3">
-                <div>
-                  <label className="text-[11px] font-normal text-neutral-600 uppercase flex items-center gap-1" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
-                    <User size={12} className="text-neutral-400" /> Recipient Full Name
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. Marcus Vance"
-                    value={recipientName}
-                    onChange={(e) => setRecipientName(e.target.value)}
-                    className="w-full mt-1 bg-neutral-50 border border-neutral-200 rounded-xl px-3 py-2 text-xs text-neutral-800 outline-none focus:border-black font-normal transition-colors"
-                    style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: "14px" }}
-                  />
+          <>
+            <form onSubmit={handleNextFromStep2} className="space-y-3">
+              <div className="bg-white rounded-2xl border border-neutral-200/90 p-4 shadow-xs space-y-3.5">
+                <div className="flex items-center gap-2 text-black font-normal text-sm uppercase pb-2 border-b border-neutral-100">
+                  <MapPin size={16} className="text-neutral-800" />
+                  <span style={{ fontFamily: "'Roboto Condensed', sans-serif" }}>Delivery & Contact Information</span>
                 </div>
-
-                <div>
-                  <label className="text-[11px] font-normal text-neutral-600 uppercase flex items-center gap-1" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
-                    <Phone size={12} className="text-neutral-400" /> Contact Phone Number
-                  </label>
-                  <input
-                    type="tel"
-                    required
-                    placeholder="e.g. 0919 123 1234"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    className="w-full mt-1 bg-neutral-50 border border-neutral-200 rounded-xl px-3 py-2 text-xs text-neutral-800 outline-none focus:border-black font-normal transition-colors"
-                    style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: "14px" }}
-                  />
-                </div>
-
-                {/* Geoapify Address Autocomplete (debounced at 300ms) with Geocoding, Reverse Geocoding, Route & Map Tile */}
-                <GeoAddressAutocomplete
-                  addressInput={addressInput}
-                  onAddressChange={setAddressInput}
-                  suggestions={suggestions}
-                  isLoading={isGeoLoading}
-                  isLocating={isLocating}
-                  isOpen={isGeoOpen}
-                  setIsOpen={setIsGeoOpen}
-                  selectedLocation={selectedLocation}
-                  onSelectSuggestion={selectSuggestion}
-                  onDetectGps={detectCurrentLocation}
-                  onDetectIp={detectIpLocation}
-                  routeInfo={routeInfo}
-                  isCalculatingRoute={isCalculatingRoute}
-                  warehouseName={geoConfig?.warehouse.name}
-                  hasGeoapifyKey={geoConfig?.hasApiKey}
-                />
-              </div>
-            </div>
-
-            {/* Courier Selection */}
-            <div className="bg-white rounded-2xl border border-neutral-200/90 p-4 shadow-xs space-y-3">
-              <div className="flex items-center justify-between pb-2 border-b border-neutral-100">
-                <div className="flex items-center gap-2 text-black font-normal text-sm uppercase">
-                  <Truck size={16} className="text-neutral-800" />
-                  <span style={{ fontFamily: "'Roboto Condensed', sans-serif" }}>Select Courier Fleet</span>
-                </div>
-                <span className="text-[11px] text-neutral-500 font-normal" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
-                  {couriers.length} Available Partners
-                </span>
-              </div>
-
-              <div className="space-y-2">
-                {couriers.map((c) => {
-                  const isSelected = selectedCourierId === c._id;
-                  return (
-                    <label
-                      key={c._id}
-                      className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer transition-all ${
-                        isSelected
-                          ? "border-black bg-neutral-900 text-white shadow-xs"
-                          : "border-neutral-200 bg-white hover:bg-neutral-50 text-neutral-800"
-                      }`}
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <input
-                          type="radio"
-                          name="courier"
-                          checked={isSelected}
-                          onChange={() => setSelectedCourierId(c._id)}
-                          className="w-4 h-4 text-black accent-black shrink-0"
-                        />
-                        <div>
-                          <div
-                            className={`text-xs font-normal ${isSelected ? "text-white" : "text-black"}`}
-                            style={{ fontFamily: "'Roboto Condensed', sans-serif" }}
-                          >
-                            {c.name}
-                          </div>
-                          <div className={`text-[11px] font-normal ${isSelected ? "text-neutral-300" : "text-neutral-500"}`} style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
-                            {c.serviceTypes.join(" • ")}
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="text-right shrink-0">
-                        <div
-                          className={`text-xs font-semibold ${isSelected ? "text-white" : "text-black"}`}
-                          style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
-                        >
-                          {c.baseFare > 0 ? formatCurrency(c.baseFare) : "Free"}
-                        </div>
-                        <div className={`text-[10px] ${isSelected ? "text-neutral-400" : "text-neutral-400"}`}>
-                          Min {c.minDistance}km
-                        </div>
-                      </div>
+                <div className="space-y-3">
+                  <div>
+                    <label className="text-[11px] font-normal text-neutral-600 uppercase flex items-center gap-1" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
+                      <User size={12} className="text-neutral-400" /> Recipient Full Name
                     </label>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Delivery Instructions */}
-            <div className="bg-white rounded-2xl border border-neutral-200/90 p-4 shadow-xs space-y-2">
-              <label className="text-[11px] font-normal text-neutral-600 uppercase block" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
-                Delivery Landmark & Gate Notes (Optional)
-              </label>
-              <div className="relative">
-                <textarea
-                  rows={2}
-                  maxLength={MAX_NOTES}
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  placeholder="e.g. Leave with lobby concierge or call upon arrival..."
-                  className="w-full bg-neutral-50 border border-neutral-200 rounded-xl px-3 py-2 text-xs text-neutral-800 outline-none focus:border-black resize-none font-normal"
-                  style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: "13px" }}
-                />
-                <div className="absolute bottom-2 right-2 text-[10px] text-neutral-400 font-mono">
-                  {notes.length}/{MAX_NOTES}
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. Marcus Vance"
+                      value={recipientName}
+                      onChange={(e) => setRecipientName(e.target.value)}
+                      className="w-full mt-1 bg-neutral-50 border border-neutral-200 rounded-xl px-3 py-2 text-xs text-neutral-800 outline-none focus:border-black font-normal transition-colors"
+                      style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: "14px" }}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[11px] font-normal text-neutral-600 uppercase flex items-center gap-1" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
+                      <Phone size={12} className="text-neutral-400" /> Contact Phone Number
+                    </label>
+                    <input
+                      type="tel"
+                      required
+                      placeholder="e.g. 0919 123 1234"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      className="w-full mt-1 bg-neutral-50 border border-neutral-200 rounded-xl px-3 py-2 text-xs text-neutral-800 outline-none focus:border-black font-normal transition-colors"
+                      style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: "14px" }}
+                    />
+                  </div>
+                  <GeoAddressAutocomplete
+                    addressInput={addressInput}
+                    onAddressChange={setAddressInput}
+                    suggestions={suggestions}
+                    isLoading={isGeoLoading}
+                    isLocating={isLocating}
+                    isOpen={isGeoOpen}
+                    setIsOpen={setIsGeoOpen}
+                    selectedLocation={selectedLocation}
+                    onSelectSuggestion={selectSuggestion}
+                    onDetectGps={detectCurrentLocation}
+                    onDetectIp={detectIpLocation}
+                    routeInfo={routeInfo}
+                    isCalculatingRoute={isCalculatingRoute}
+                    warehouseName={geoConfig?.warehouse.name}
+                    hasGeoapifyKey={geoConfig?.hasApiKey}
+                  />
                 </div>
               </div>
-            </div>
-
-            {/* Step 1 Submit Button */}
-            <button
-              type="submit"
-              className="w-full bg-black hover:bg-neutral-800 text-white font-normal py-3.5 rounded-xl flex items-center justify-center gap-2 cursor-pointer shadow-md transition-all active:scale-[0.99]"
-              style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: "16px" }}
-            >
-              <span>Continue to Payment</span>
-              <ArrowRight size={17} />
-            </button>
-          </form>
+              <div className="bg-white rounded-2xl border border-neutral-200/90 p-4 shadow-xs space-y-3">
+                <div className="flex items-center justify-between pb-2 border-b border-neutral-100">
+                  <div className="flex items-center gap-2 text-black font-normal text-sm uppercase">
+                    <Truck size={16} className="text-neutral-800" />
+                    <span style={{ fontFamily: "'Roboto Condensed', sans-serif" }}>Select Courier Fleet</span>
+                  </div>
+                </div>
+                <div className="grid grid-cols-4 gap-2">
+                  {couriers.map((c) => {
+                    const isSelected = selectedCourierId === c.id;
+                    const charge = calculateDeliveryCharge(c, actualDistanceKm);
+                    return (
+                      <button
+                        key={c.id}
+                        type="button"
+                        disabled={!c.isAvailable}
+                        onClick={() => {
+                          setSelectedCourierId(c.id);
+                          setShowPaymentPrompt(true);
+                        }}
+                        className={`flex flex-col items-center p-2 rounded-xl border transition-all ${
+                          !c.isAvailable ? "bg-neutral-100 border-neutral-200 opacity-60 cursor-not-allowed" :
+                          isSelected ? "border-black bg-neutral-900 text-white shadow-xs" : 
+                          "border-neutral-200 bg-white hover:bg-neutral-50 text-neutral-800"
+                        }`}
+                      >
+                        {c.isAvailable ? (
+                          <>
+                            <img src={c.logoUrl} alt={c.name} className="w-8 h-8 object-contain mb-1" />
+                            <div className={`text-[9px] font-semibold ${isSelected ? "text-white" : "text-black"}`}>
+                              {formatCurrency(charge)}
+                            </div>
+                          </>
+                        ) : (
+                          <div className="text-[8px] font-bold text-neutral-500 text-center uppercase leading-tight">
+                            UNAVAILABLE
+                          </div>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+              <div className="bg-white rounded-2xl border border-neutral-200/90 p-4 shadow-xs space-y-2">
+                <label className="text-[11px] font-normal text-neutral-600 uppercase block" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
+                  Delivery Landmark & Gate Notes (Optional)
+                </label>
+                <div className="relative">
+                  <textarea
+                    rows={2}
+                    maxLength={MAX_NOTES}
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    placeholder="e.g. Leave with lobby concierge or call upon arrival..."
+                    className="w-full bg-neutral-50 border border-neutral-200 rounded-xl px-3 py-2 text-xs text-neutral-800 outline-none focus:border-black resize-none font-normal"
+                    style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: "13px" }}
+                  />
+                  <div className="absolute bottom-2 right-2 text-[10px] text-neutral-400 font-mono">
+                    {notes.length}/{MAX_NOTES}
+                  </div>
+                </div>
+              </div>
+              <button
+                type="submit"
+                className="w-full bg-black hover:bg-neutral-800 text-white font-normal py-3.5 rounded-xl flex items-center justify-center gap-2 cursor-pointer shadow-md transition-all active:scale-[0.99]"
+                style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: "16px" }}
+              >
+                <span>Continue to Payment</span>
+                <ArrowRight size={17} />
+              </button>
+            </form>
+            {showPaymentPrompt && (
+              <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+                <div className="bg-white p-6 rounded-2xl w-full max-w-sm space-y-4">
+                  <h3 className="text-lg font-semibold">Delivery Fee Payment</h3>
+                  <button onClick={() => { setPaymentOption('PAY_AT_CHECKOUT'); setShowPaymentPrompt(false); }} className="w-full p-3 border rounded-xl">Pay at Checkout</button>
+                  <button onClick={() => { setPaymentOption('PAY_UPON_FULFILLMENT'); setShowPaymentPrompt(false); }} className="w-full p-3 border rounded-xl">Pay upon Fulfillment</button>
+                </div>
+              </div>
+            )}
+          </>
         )}
 
         {/* ================= STEP 2: PAYMENT & VERIFICATION ================= */}

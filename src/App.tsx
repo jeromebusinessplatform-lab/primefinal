@@ -23,8 +23,10 @@ import AdminOrdersPage from "./pages/admin/orders.tsx";
 import AdminLogisticsPage from "./pages/admin/logistics.tsx";
 import AdminProductsPage from "./pages/admin/products.tsx";
 import AdminSettingsPage from "./pages/admin/settings.tsx";
+import AdminCourierPage from "./pages/admin/courier.tsx";
 import AdminReceiptOcrPage from "./pages/admin/receipt-ocr.tsx";
 import AdminAnalyticsPage from "./pages/admin/analytics.tsx";
+import InstallPrompt from "./components/InstallPrompt.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 function AdminGuard({ children }: { children: ReactNode }) {
@@ -41,6 +43,7 @@ export default function App() {
         <AdminProvider>
           <Toaster />
           <OrientationLock />
+          <InstallPrompt />
           <div className="w-full min-h-[100dvh] flex flex-col items-center justify-start bg-neutral-950 overflow-x-hidden">
             <div className="w-full max-w-[412px] min-h-[100dvh] bg-[#f3f4f6] relative flex flex-col shadow-2xl overflow-x-hidden border-x border-neutral-800/20">
               <BrowserRouter>
@@ -71,6 +74,7 @@ export default function App() {
                     <Route path="ocr" element={<AdminReceiptOcrPage />} />
                     <Route path="logistics" element={<AdminLogisticsPage />} />
                     <Route path="products" element={<AdminProductsPage />} />
+                    <Route path="courier" element={<AdminCourierPage />} />
                     <Route path="settings" element={<AdminSettingsPage />} />
                     <Route path="*" element={<Navigate to="/admin/orders" replace />} />
                   </Route>
