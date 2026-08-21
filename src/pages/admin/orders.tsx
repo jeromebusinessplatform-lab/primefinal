@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { useOrders, type CustomerOrder, type OrderStatus } from "@/hooks/useOrders.ts";
 import { toast } from "sonner";
+import { formatCurrency } from "@/lib/utils.ts";
 
 const STATUS_LABELS: Record<OrderStatus, string> = {
   REVIEW: "Under Review",
@@ -222,7 +223,7 @@ export default function AdminOrdersPage() {
                       className="text-black font-normal text-lg"
                       style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
                     >
-                      ${order.total.toFixed(2)}
+                      {formatCurrency(order.total)}
                     </div>
                     <div className="text-neutral-400 text-[11px] font-normal" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
                       {new Date(order._creationTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
@@ -328,21 +329,21 @@ export default function AdminOrdersPage() {
                       <span className="text-neutral-700">
                         {it.quantity}x {it.productName}
                       </span>
-                      <span className="text-black font-medium">${it.subtotal.toFixed(2)}</span>
+                      <span className="text-black font-medium">{formatCurrency(it.subtotal)}</span>
                     </div>
                   ))}
                   <div className="pt-2 text-xs space-y-1">
                     <div className="flex justify-between text-neutral-500">
                       <span>Subtotal:</span>
-                      <span>${selectedOrder.subtotal.toFixed(2)}</span>
+                      <span>{formatCurrency(selectedOrder.subtotal)}</span>
                     </div>
                     <div className="flex justify-between text-neutral-500">
                       <span>Delivery Fee:</span>
-                      <span>${selectedOrder.deliveryFee.toFixed(2)}</span>
+                      <span>{formatCurrency(selectedOrder.deliveryFee)}</span>
                     </div>
                     <div className="flex justify-between text-black font-semibold text-sm pt-1 border-t border-neutral-200">
                       <span>Total:</span>
-                      <span>${selectedOrder.total.toFixed(2)}</span>
+                      <span>{formatCurrency(selectedOrder.total)}</span>
                     </div>
                   </div>
                 </div>

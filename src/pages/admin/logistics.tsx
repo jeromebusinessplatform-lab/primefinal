@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useCouriers } from "@/hooks/useCouriers.ts";
 import { Truck, Plus, Trash2, X, Check } from "lucide-react";
 import { toast } from "sonner";
+import { formatCurrency } from "@/lib/utils.ts";
 
 export default function LogisticsPage() {
   const { couriers, addCourier, updateCourier, removeCourier } = useCouriers();
@@ -122,7 +123,7 @@ export default function LogisticsPage() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs text-neutral-600 uppercase block mb-1">Base Fare ($)</label>
+                  <label className="text-xs text-neutral-600 uppercase block mb-1">Base Fare (₱)</label>
                   <input
                     type="number"
                     min="0"
@@ -210,7 +211,7 @@ export default function LogisticsPage() {
               <div className="bg-neutral-50 rounded-xl p-3 text-xs space-y-1 text-neutral-600 border border-neutral-100 font-normal" style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: "13px" }}>
                 <div className="flex justify-between">
                   <span>Base Rate:</span>
-                  <span className="font-semibold text-black">${courier.baseFare.toFixed(2)}</span>
+                  <span className="font-semibold text-black">{formatCurrency(courier.baseFare)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Min Coverage:</span>
@@ -218,7 +219,7 @@ export default function LogisticsPage() {
                 </div>
                 <div className="flex justify-between">
                   <span>Excess Rate:</span>
-                  <span className="font-semibold text-black">${courier.excessDistanceFare.toFixed(2)} / km</span>
+                  <span className="font-semibold text-black">{formatCurrency(courier.excessDistanceFare)} / km</span>
                 </div>
               </div>
 

@@ -5,6 +5,7 @@ import { useDebounce } from "@/hooks/use-debounce.ts";
 import { useProducts } from "@/hooks/useProducts.ts";
 import { type Product } from "@/data/products.ts";
 import { toast } from "sonner";
+import { formatCurrency } from "@/lib/utils.ts";
 
 function BadgePill({ badge }: { badge: "NEW" | "SALE" | "LOW_STOCK" }) {
   const config = {
@@ -150,7 +151,7 @@ function ProductCard({ product }: { product: Product; key?: string }) {
                 fontSize: "17px",
               }}
             >
-              ${unitPrice.toFixed(2)}
+              {formatCurrency(unitPrice)}
             </span>
             {product.salePrice && (
               <span
@@ -160,7 +161,7 @@ function ProductCard({ product }: { product: Product; key?: string }) {
                   fontSize: "11px",
                 }}
               >
-                ${product.price.toFixed(2)}
+                {formatCurrency(product.price)}
               </span>
             )}
           </div>

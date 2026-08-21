@@ -2,6 +2,7 @@ import { useTelegram } from "@/context/TelegramContext.tsx";
 import { useOrders, type CustomerOrder } from "@/hooks/useOrders.ts";
 import { Package, Clock, Truck } from "lucide-react";
 import { Link } from "react-router-dom";
+import { formatCurrency } from "@/lib/utils.ts";
 
 const STATUS_LABELS: Record<string, string> = {
   REVIEW: "Under Review",
@@ -133,7 +134,7 @@ export default function OrdersPage() {
                     <span className="truncate pr-2 font-normal">
                       {it.quantity}x {it.productName}
                     </span>
-                    <span className="font-normal text-neutral-900">${it.subtotal.toFixed(2)}</span>
+                    <span className="font-normal text-neutral-900">{formatCurrency(it.subtotal)}</span>
                   </div>
                 ))}
               </div>
@@ -146,7 +147,7 @@ export default function OrdersPage() {
                   className="text-black font-normal"
                   style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: "18px" }}
                 >
-                  ${order.total.toFixed(2)}
+                  {formatCurrency(order.total)}
                 </span>
               </div>
 

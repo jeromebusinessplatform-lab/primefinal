@@ -3,6 +3,7 @@ import { useProducts } from "@/hooks/useProducts.ts";
 import { Package, Plus, Trash2, Edit2, X, Check, ShoppingBag } from "lucide-react";
 import { type Product } from "@/data/products.ts";
 import { toast } from "sonner";
+import { formatCurrency } from "@/lib/utils.ts";
 
 export default function AdminProductsPage() {
   const { products, addProduct, updateProduct, removeProduct } = useProducts();
@@ -180,7 +181,7 @@ export default function AdminProductsPage() {
 
               <div className="grid grid-cols-3 gap-3">
                 <div>
-                  <label className="text-neutral-600 uppercase block mb-1">Price ($)</label>
+                  <label className="text-neutral-600 uppercase block mb-1">Price (₱)</label>
                   <input
                     type="number"
                     step="0.01"
@@ -193,7 +194,7 @@ export default function AdminProductsPage() {
                 </div>
 
                 <div>
-                  <label className="text-neutral-600 uppercase block mb-1">Sale Price ($)</label>
+                  <label className="text-neutral-600 uppercase block mb-1">Sale Price (₱)</label>
                   <input
                     type="number"
                     step="0.01"
@@ -300,11 +301,11 @@ export default function AdminProductsPage() {
 
                 <div className="mt-1 flex items-baseline gap-2">
                   <span className="text-black font-semibold text-base" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
-                    ${(product.salePrice ?? product.price).toFixed(2)}
+                    {formatCurrency(product.salePrice ?? product.price)}
                   </span>
                   {product.salePrice && (
                     <span className="text-xs text-red-500 line-through">
-                      ${product.price.toFixed(2)}
+                      {formatCurrency(product.price)}
                     </span>
                   )}
                   {product.badge && (

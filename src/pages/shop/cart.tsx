@@ -1,6 +1,7 @@
 import { useCart } from "@/context/CartContext.tsx";
 import { Trash2, Plus, Minus, ArrowRight, ShoppingBag } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
+import { formatCurrency } from "@/lib/utils.ts";
 
 export default function CartPage() {
   const { items, updateQuantity, removeItem, totalItems, toggleSelect, subtotal } = useCart();
@@ -96,7 +97,7 @@ export default function CartPage() {
                     className="text-xs text-black font-normal mt-0.5"
                     style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
                   >
-                    ${item.unitPrice.toFixed(2)} each
+                    {formatCurrency(item.unitPrice)} each
                   </div>
 
                   {/* Quantity Stepper & Remove */}
@@ -139,16 +140,16 @@ export default function CartPage() {
           <div className="bg-white rounded-2xl border border-neutral-200/90 p-4 shadow-xs space-y-2">
             <div className="flex justify-between text-xs text-neutral-600 font-normal" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
               <span>Subtotal ({totalItems} items)</span>
-              <span className="font-normal text-neutral-900">${subtotal.toFixed(2)}</span>
+              <span className="font-normal text-neutral-900">{formatCurrency(subtotal)}</span>
             </div>
             <div className="flex justify-between text-xs text-neutral-600 font-normal" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
               <span>Estimated Tax (5%)</span>
-              <span className="font-normal text-neutral-900">${estTax.toFixed(2)}</span>
+              <span className="font-normal text-neutral-900">{formatCurrency(estTax)}</span>
             </div>
             <div className="flex justify-between text-xs text-neutral-600 font-normal" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
               <span>Delivery Fee</span>
               <span className="font-normal text-neutral-900">
-                {shipping === 0 ? "FREE" : `$${shipping.toFixed(2)}`}
+                {shipping === 0 ? "FREE" : formatCurrency(shipping)}
               </span>
             </div>
             <div className="pt-2 border-t border-neutral-100 flex justify-between items-baseline">
@@ -162,7 +163,7 @@ export default function CartPage() {
                 className="text-xl font-normal text-black"
                 style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
               >
-                ${grandTotal.toFixed(2)}
+                {formatCurrency(grandTotal)}
               </span>
             </div>
           </div>

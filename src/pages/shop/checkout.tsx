@@ -6,6 +6,7 @@ import { ArrowLeft, ShieldCheck, MapPin, Upload, CheckCircle2, Loader2, Truck } 
 import { toast } from "sonner";
 import { useOrders } from "@/hooks/useOrders.ts";
 import { useCouriers } from "@/hooks/useCouriers.ts";
+import { formatCurrency } from "@/lib/utils.ts";
 
 export default function CheckoutPage() {
   const { items, subtotal, clearCart } = useCart();
@@ -327,16 +328,16 @@ export default function CheckoutPage() {
         <div className="bg-white rounded-2xl border border-neutral-200/90 p-4 shadow-xs space-y-2">
           <div className="flex justify-between text-xs text-neutral-600 font-normal" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
             <span>Items Subtotal ({items.length} items)</span>
-            <span className="font-normal text-neutral-900">${subtotal.toFixed(2)}</span>
+            <span className="font-normal text-neutral-900">{formatCurrency(subtotal)}</span>
           </div>
           <div className="flex justify-between text-xs text-neutral-600 font-normal" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
             <span>Est. Taxes & Processing (5%)</span>
-            <span className="font-normal text-neutral-900">${estTax.toFixed(2)}</span>
+            <span className="font-normal text-neutral-900">{formatCurrency(estTax)}</span>
           </div>
           <div className="flex justify-between text-xs text-neutral-600 font-normal" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
             <span>Priority Dispatch</span>
             <span className="font-normal text-neutral-900">
-              {shipping === 0 ? "FREE" : `$${shipping.toFixed(2)}`}
+              {shipping === 0 ? "FREE" : formatCurrency(shipping)}
             </span>
           </div>
           <div className="pt-2 border-t border-neutral-100 flex justify-between items-baseline">
@@ -350,7 +351,7 @@ export default function CheckoutPage() {
               className="text-xl font-normal text-black"
               style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
             >
-              ${grandTotal.toFixed(2)}
+              {formatCurrency(grandTotal)}
             </span>
           </div>
 
