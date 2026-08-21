@@ -2,7 +2,8 @@ import express from "express";
 import path from "path";
 import { createServer as createViteServer } from "vite";
 import dotenv from "dotenv";
-import { GoogleGenAI, Type } from "@google/genai";
+import axios from "axios";
+import FormData from "form-data";
 
 dotenv.config();
 
@@ -11,16 +12,6 @@ const PORT = 3000;
 
 app.use(express.json({ limit: "25mb" }));
 app.use(express.urlencoded({ limit: "25mb", extended: true }));
-
-// Initialize Google GenAI Client with mandatory User-Agent
-const geminiClient = new GoogleGenAI({
-  apiKey: process.env.GEMINI_API_KEY,
-  httpOptions: {
-    headers: {
-      "User-Agent": "aistudio-build",
-    },
-  },
-});
 
 // Default Warehouse Location: PRIME Logistics Hub (BGC, Taguig, Metro Manila)
 const DEFAULT_WAREHOUSE = {
@@ -641,114 +632,56 @@ app.post("/api/ocr/analyze-receipt", async (req, res) => {
     // Clean base64 string
     const cleanBase64 = imageBase64.replace(/^data:image\/[a-z\+]+;base64,/, "");
 
-    const apiKey = process.env.GEMINI_API_KEY;
+    const taggunApiKey = process.env.TAGGUN_API_KEY;
 
-    if (apiKey && apiKey.trim().length > 0) {
+    if (taggunApiKey && taggunApiKey.trim().length > 0) {
       try {
-        const prompt = `You are a high-precision financial OCR & payment receipt verification specialist for Philippine and international e-commerce.
-Analyze the attached payment receipt or bank transfer screenshot. Extract every single field with 100% precision.
+        const formData = new FormData();
+        formData.append("file", Buffer.from(cleanBase64, "base64"), { filename: "receipt.jpg", contentType: mimeType });
 
-Expected Target Recipient: "${expectedReceiver}"
-${expectedAmount ? `Expected Transaction Amount: PHP ${expectedAmount}` : ""}
-
-Carefully identify:
-1. Payment Channel: Determine exact source: "GCash", "Maya", "BPI", "BDO", "UnionBank", "Metrobank", "Security Bank", "Landbank", "RCBC", "ShopeePay", "GrabPay", "InstaPay", "PESONet", "Store POS Invoice", or "Other".
-2. Channel Type: "E_WALLET", "BANK_TRANSFER", "INSTAPAY", "PESONET", "PHYSICAL_RECEIPT", or "CREDIT_CARD".
-3. Reference / Transaction / Trace Number: The unique identification code of the payment (e.g. GCash 13-digit ref, Maya trace, BPI confirmation).
-4. Total Payment Amount: Numerical value without currency symbols.
-5. Currency: ISO code (e.g. PHP, USD).
-6. Sender Name & Account: Name and/or phone number of the sender if visible.
-7. Receiver Name & Account: Name and/or phone/account number of the recipient.
-8. Transaction Date and Time: As displayed on the receipt.
-9. Status: "SUCCESS", "COMPLETED", "PENDING", or "FAILED".
-10. Confidence Score: Number from 0 to 100 on overall OCR fidelity.
-11. Raw Text: Full transcription of text visible on the receipt.
-12. Validation Notes: List bullet points highlighting payment validity, match against expected recipient/amount, reference number checksum/format validity, and any anomalies.
-
-Output strictly valid JSON matching the schema.`;
-
-        const response = await geminiClient.models.generateContent({
-          model: "gemini-3.7-flash",
-          contents: {
-            parts: [
-              {
-                inlineData: {
-                  mimeType: mimeType.includes("svg") ? "image/png" : mimeType,
-                  data: cleanBase64,
-                },
-              },
-              {
-                text: prompt,
-              },
-            ],
-          },
-          config: {
-            responseMimeType: "application/json",
-            responseSchema: {
-              type: Type.OBJECT,
-              properties: {
-                channel: { type: Type.STRING },
-                channelType: { type: Type.STRING },
-                referenceNumber: { type: Type.STRING },
-                amount: { type: Type.NUMBER },
-                currency: { type: Type.STRING },
-                senderName: { type: Type.STRING },
-                senderAccount: { type: Type.STRING },
-                receiverName: { type: Type.STRING },
-                receiverAccount: { type: Type.STRING },
-                transactionDateTime: { type: Type.STRING },
-                status: { type: Type.STRING },
-                confidenceScore: { type: Type.NUMBER },
-                rawText: { type: Type.STRING },
-                notes: {
-                  type: Type.ARRAY,
-                  items: { type: Type.STRING },
-                },
-              },
-              required: ["channel", "channelType", "referenceNumber", "amount", "status", "confidenceScore"],
+        const response = await axios.post(
+          "https://api.taggun.io/api/receipt/v1/verbose/file",
+          formData,
+          {
+            headers: {
+              ...formData.getHeaders(),
+              "apikey": taggunApiKey,
             },
-          },
-        });
+          }
+        );
 
-        const rawJson = response.text?.trim() || "{}";
-        const parsed = JSON.parse(rawJson);
+        const data = response.data;
 
-        const extractedAmount = typeof parsed.amount === "number" ? parsed.amount : parseFloat(parsed.amount) || 0;
-        const isAmountMatched =
-          expectedAmount !== undefined ? Math.abs(extractedAmount - expectedAmount) < 0.05 : true;
+        const extractedAmount = data.totalAmount?.data || 0;
+        const isAmountMatched = expectedAmount !== undefined ? Math.abs(extractedAmount - expectedAmount) < 0.05 : true;
 
-        const recName = parsed.receiverName || "";
+        const receiverName = data.merchantName?.data || "";
         const isReceiverMatched = expectedReceiver
-          ? recName.toLowerCase().includes(expectedReceiver.toLowerCase()) ||
-            expectedReceiver.toLowerCase().includes(recName.toLowerCase()) ||
-            recName.length === 0 // If not explicitly mentioned on slip, pass with note
+          ? receiverName.toLowerCase().includes(expectedReceiver.toLowerCase()) ||
+            expectedReceiver.toLowerCase().includes(receiverName.toLowerCase())
           : true;
 
-        const result = {
+        const result: any = {
           success: true,
-          channel: parsed.channel || "GCash",
-          channelType: parsed.channelType || "E_WALLET",
-          referenceNumber: parsed.referenceNumber || "REF-" + Date.now(),
+          channel: "Taggun-Processed",
+          channelType: "OTHER",
+          referenceNumber: data.referenceNumber?.data || "REF-" + Date.now(),
           amount: extractedAmount,
-          currency: parsed.currency || "PHP",
-          senderName: parsed.senderName,
-          senderAccount: parsed.senderAccount,
-          receiverName: parsed.receiverName || expectedReceiver,
-          receiverAccount: parsed.receiverAccount,
-          transactionDateTime: parsed.transactionDateTime || new Date().toLocaleString(),
-          status: parsed.status || "SUCCESS",
-          confidenceScore: Math.min(100, Math.max(0, parsed.confidenceScore || 95)),
-          rawText: parsed.rawText,
-          notes: parsed.notes || [
-            `Verified channel: ${parsed.channel}`,
-            `Reference ID: ${parsed.referenceNumber}`,
+          currency: data.currencyCode?.data || "PHP",
+          receiverName: receiverName,
+          transactionDateTime: data.date?.data || new Date().toLocaleString(),
+          status: "SUCCESS",
+          confidenceScore: Math.min(100, Math.max(0, (data.confidenceScore || 0.9) * 100)),
+          rawText: data.text?.data,
+          notes: [
+            `Processed via Taggun`,
             isAmountMatched ? `Amount PHP ${extractedAmount.toFixed(2)} matches cart total` : `Amount discrepancy: PHP ${extractedAmount.toFixed(2)} vs expected PHP ${expectedAmount?.toFixed(2)}`,
           ],
           isAmountMatched,
           isReceiverMatched,
           expectedAmount,
           expectedReceiver,
-          aiModelUsed: "Gemini 3.7 Flash Vision OCR",
+          aiModelUsed: "Taggun Verbose OCR",
           analyzedAt: new Date().toISOString(),
           executionTimeMs: Date.now() - startTime,
         };
@@ -757,8 +690,8 @@ Output strictly valid JSON matching the schema.`;
           success: true,
           result,
         });
-      } catch (geminiError: any) {
-        console.warn("Gemini OCR error, invoking heuristic fallback:", geminiError.message);
+      } catch (taggunError: any) {
+        console.warn("Taggun OCR error, invoking heuristic fallback:", taggunError.message);
         const fallbackResult = analyzeReceiptHeuristic(imageBase64, expectedAmount, expectedReceiver);
         return res.json({
           success: true,
@@ -771,7 +704,7 @@ Output strictly valid JSON matching the schema.`;
       }
     }
 
-    // Fallback if no GEMINI_API_KEY is configured
+    // Fallback if no TAGGUN_API_KEY is configured
     const fallbackResult = analyzeReceiptHeuristic(imageBase64, expectedAmount, expectedReceiver);
     return res.json({
       success: true,

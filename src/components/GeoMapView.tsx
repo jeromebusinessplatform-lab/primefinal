@@ -168,11 +168,6 @@ export function GeoMapView({
       <div ref={mapContainerRef} className="w-full h-full z-0" style={{ minHeight: height }} />
 
       {/* Map Badge Overlays */}
-      <div className="absolute top-2 left-2 z-10 bg-black/85 backdrop-blur-xs text-white text-[10px] px-2 py-0.5 rounded-md font-mono flex items-center gap-1 shadow-sm pointer-events-none">
-        <Layers size={10} className="text-emerald-400" />
-        <span>Geoapify OSM Tiles</span>
-      </div>
-
       <div className="absolute bottom-2 right-2 z-10 bg-white/90 backdrop-blur-xs text-neutral-800 text-[10px] px-2 py-0.5 rounded-md font-mono border border-neutral-200 shadow-xs pointer-events-none">
         {centerLat.toFixed(4)}°N, {centerLon.toFixed(4)}°E
       </div>

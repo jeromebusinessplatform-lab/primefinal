@@ -235,16 +235,14 @@ export async function searchAddressAutocomplete(
   if (!text || text.trim().length < 2) return [];
 
   try {
+    const lat = options?.lat ?? 14.5516;
+    const lon = options?.lon ?? 121.0503;
     const params = new URLSearchParams({
       text: text.trim(),
       country: options?.country || "ph",
       limit: String(options?.limit || 6),
+      bias: `proximity:${lon},${lat}`,
     });
-
-    if (options?.lat !== undefined && options?.lon !== undefined) {
-      params.append("lat", String(options.lat));
-      params.append("lon", String(options.lon));
-    }
 
     const res = await fetch(`/api/geo/autocomplete?${params.toString()}`);
     if (res.ok) {

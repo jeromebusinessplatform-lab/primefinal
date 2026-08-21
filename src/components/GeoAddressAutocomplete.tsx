@@ -138,32 +138,9 @@ export function GeoAddressAutocomplete({
           </div>
         </div>
 
-        {/* Quick Selection Chips */}
-        <div className="flex items-center gap-1.5 overflow-x-auto py-1 mt-1 scrollbar-none">
-          <span className="text-[10px] text-neutral-400 uppercase tracking-wide shrink-0">Quick:</span>
-          {quickChips.map((chip, i) => (
-            <button
-              key={i}
-              type="button"
-              onClick={() => onSelectSuggestion(chip.loc)}
-              className="text-[11px] px-2 py-0.5 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 rounded-md whitespace-nowrap cursor-pointer transition-colors border border-neutral-200/60 shrink-0 font-normal"
-              style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
-            >
-              {chip.label}
-            </button>
-          ))}
-        </div>
-
         {/* 300ms Debounced Suggestions Dropdown */}
         {isOpen && suggestions.length > 0 && (
           <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-neutral-200 rounded-xl shadow-xl z-50 overflow-hidden divide-y divide-neutral-100 animate-in fade-in-50 duration-150">
-            <div className="bg-neutral-50 px-3 py-1.5 flex items-center justify-between text-[10px] text-neutral-500 uppercase tracking-wider font-mono">
-              <span className="flex items-center gap-1">
-                <Sparkles size={11} className="text-amber-500" /> Geoapify Address Autocomplete
-              </span>
-              <span>300ms Debounce</span>
-            </div>
-
             <div className="max-h-60 overflow-y-auto">
               {suggestions.map((item, idx) => (
                 <button
@@ -200,7 +177,7 @@ export function GeoAddressAutocomplete({
         )}
       </div>
 
-      {/* Selected Location & Route & Leaflet Map Tile Preview */}
+      {/* Selected Location & Leaflet Map Tile Preview */}
       {selectedLocation && (
         <div className="bg-neutral-50 border border-neutral-200 rounded-xl overflow-hidden shadow-2xs space-y-2">
           {/* Real Slippy Leaflet OpenStreetMap / Geoapify Map View */}
@@ -208,50 +185,9 @@ export function GeoAddressAutocomplete({
             <GeoMapView
               centerLat={selectedLocation.lat}
               centerLon={selectedLocation.lon}
-              originLat={14.5516}
-              originLon={121.0503}
               destinationLabel={selectedLocation.formatted}
-              originLabel={warehouseName}
-              routeCoordinates={routeInfo?.coordinates}
               height={180}
             />
-          </div>
-
-          {/* Route Metrics Breakdown */}
-          <div className="p-3 pt-0 space-y-2">
-            <div className="flex items-center justify-between text-xs text-neutral-600">
-              <div className="flex items-center gap-1 font-medium text-black" style={{ fontFamily: "'Roboto Condensed', sans-serif" }}>
-                <Route size={13} className="text-neutral-700" />
-                <span>Dispatch Route Calculation</span>
-              </div>
-              {isCalculatingRoute && (
-                <div className="flex items-center gap-1 text-[10px] text-neutral-500">
-                  <Loader2 size={11} className="animate-spin" /> Routing...
-                </div>
-              )}
-            </div>
-
-            <div className="grid grid-cols-2 gap-2 text-xs" style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: "13px" }}>
-              <div className="bg-white p-2 rounded-lg border border-neutral-200/80">
-                <span className="text-[10px] text-neutral-400 block uppercase">Origin Hub:</span>
-                <span className="font-semibold text-neutral-800 truncate block">{warehouseName}</span>
-              </div>
-
-              <div className="bg-white p-2 rounded-lg border border-neutral-200/80">
-                <span className="text-[10px] text-neutral-400 block uppercase">Transit Metrics:</span>
-                {routeInfo ? (
-                  <span className="font-semibold text-neutral-900 flex items-center gap-2">
-                    <span>{routeInfo.distanceKm} km</span>
-                    <span className="text-neutral-400">•</span>
-                    <span className="text-emerald-700 flex items-center gap-0.5">
-                      <Clock size={11} /> ~{routeInfo.durationMinutes} mins
-                    </span>
-                  </span>
-                ) : (
-                  <span className="text-neutral-400 italic">Calculating...</span>
-                )}
-              </div>
-            </div>
           </div>
         </div>
       )}
