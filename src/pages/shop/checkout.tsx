@@ -89,7 +89,7 @@ export default function CheckoutPage() {
   // Submission State
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const selectedCourier = couriers.find((c) => c._id === selectedCourierId) || couriers[0];
+  const selectedCourier = couriers.find((c) => c.id === selectedCourierId) || couriers[0];
   const estTax = activeSubtotal * 0.05;
 
   // Calculate dynamic courier shipping fee with Geoapify route distance

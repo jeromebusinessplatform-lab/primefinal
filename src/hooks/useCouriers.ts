@@ -24,16 +24,18 @@ export function useCouriers() {
   const calculateDeliveryCharge = (courier: Courier, distanceKm: number) => {
     if (!courier.isAvailable) return 0;
     
+    // Formula: baseFare + max(0, distanceKm - minDistanceInclusions) * perKmCharge + platformFee + surchargeFee + (nightDiff ? 50 : 0)
     let charge = courier.baseFare;
-    if (distanceKm > 4) {
-      charge += (distanceKm - 4) * courier.perKmCharge;
-    }
+    
+    const excessDistance = Math.max(0, distanceKm - courier.minDistanceInclusions);
+    charge += excessDistance * courier.perKmCharge;
+    
     charge += courier.platformFee + courier.surchargeFee;
     
-    // Simple night differential check
+    // Night differential check (10 PM to 5 AM)
     const hour = new Date().getHours();
     if (courier.nightDifferentialEnabled && (hour >= 22 || hour < 5)) {
-      charge += 50; // Arbitrary night differential fee
+      charge += 50;
     }
 
     return charge;

@@ -1,9 +1,12 @@
 export interface Courier {
   id: string;
   name: string;
+  type: 'Standard' | 'Express' | 'Priority';
   logoUrl: string;
   isAvailable: boolean;
   baseFare: number;
+  minFare: number;
+  minDistanceInclusions: number; // in KM
   perKmCharge: number;
   platformFee: number;
   nightDifferentialEnabled: boolean;
