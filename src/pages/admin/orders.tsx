@@ -195,28 +195,28 @@ export default function AdminOrdersPage() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <div className="bg-white border border-neutral-200 rounded-xl p-3.5 shadow-2xs">
           <div className="text-neutral-500 text-[10px] font-normal uppercase tracking-wider" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>Pending Review</div>
-          <div className="text-amber-600 text-2xl font-normal mt-1" style={{ fontFamily: "'Roboto Condensed', sans-serif" }}>
+          <div className="text-blue-950 text-2xl font-normal mt-1" style={{ fontFamily: "'Roboto Condensed', sans-serif" }}>
             {orders.filter((o) => o.orderStatus === "REVIEW").length}
           </div>
         </div>
 
         <div className="bg-white border border-neutral-200 rounded-xl p-3.5 shadow-2xs">
           <div className="text-neutral-500 text-[10px] font-normal uppercase tracking-wider" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>In Preparation</div>
-          <div className="text-blue-600 text-2xl font-normal mt-1" style={{ fontFamily: "'Roboto Condensed', sans-serif" }}>
+          <div className="text-blue-950 text-2xl font-normal mt-1" style={{ fontFamily: "'Roboto Condensed', sans-serif" }}>
             {orders.filter((o) => ["PAYMENT_CONFIRMED", "START_PACKING", "READY"].includes(o.orderStatus)).length}
           </div>
         </div>
 
         <div className="bg-white border border-neutral-200 rounded-xl p-3.5 shadow-2xs">
           <div className="text-neutral-500 text-[10px] font-normal uppercase tracking-wider" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>Out for Delivery</div>
-          <div className="text-purple-600 text-2xl font-normal mt-1" style={{ fontFamily: "'Roboto Condensed', sans-serif" }}>
+          <div className="text-blue-950 text-2xl font-normal mt-1" style={{ fontFamily: "'Roboto Condensed', sans-serif" }}>
             {orders.filter((o) => ["AWAITING_RIDER", "DISPATCHED"].includes(o.orderStatus)).length}
           </div>
         </div>
 
         <div className="bg-white border border-neutral-200 rounded-xl p-3.5 shadow-2xs">
           <div className="text-neutral-500 text-[10px] font-normal uppercase tracking-wider" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>Delivered</div>
-          <div className="text-emerald-600 text-2xl font-normal mt-1" style={{ fontFamily: "'Roboto Condensed', sans-serif" }}>
+          <div className="text-blue-950 text-2xl font-normal mt-1" style={{ fontFamily: "'Roboto Condensed', sans-serif" }}>
             {orders.filter((o) => o.orderStatus === "DELIVERED").length}
           </div>
         </div>
