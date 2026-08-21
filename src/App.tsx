@@ -20,6 +20,7 @@ import NotificationsPage from "./pages/shop/notifications.tsx";
 import AdminLogin from "./pages/admin/login.tsx";
 import AdminLayout from "./pages/admin/layout.tsx";
 import AdminOrdersPage from "./pages/admin/orders.tsx";
+import AdminCustomersPage from "./pages/admin/customers.tsx";
 import AdminProductsPage from "./pages/admin/products.tsx";
 import AdminSettingsPage from "./pages/admin/settings.tsx";
 import AdminCourierPage from "./pages/admin/courier.tsx";
@@ -70,6 +71,7 @@ export default function App() {
                   >
                     <Route path="orders" element={<AdminOrdersPage />} />
                     <Route path="analytics" element={<AdminAnalyticsPage />} />
+                    <Route path="customers" element={<AdminCustomersPage />} />
                     <Route path="ocr" element={<AdminReceiptOcrPage />} />
                     <Route path="products" element={<AdminProductsPage />} />
                     <Route path="courier" element={<AdminCourierPage />} />
