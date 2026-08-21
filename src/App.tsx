@@ -33,7 +33,7 @@ import NotFound from "./pages/NotFound.tsx";
 function AdminGuard({ children }: { children: ReactNode }) {
   const { isAuthenticated, isLoading } = useAdmin();
   if (isLoading) return null;
-  if (!isAuthenticated) return <Navigate to="/admin" replace />;
+  if (!isAuthenticated) return <Navigate to="/admin/login" replace />;
   return <>{children}</>;
 }
 
@@ -61,7 +61,7 @@ export default function App() {
                     <Route path="notifications" element={<NotificationsPage />} />
                   </Route>
 
-                  <Route path="/admin" element={<AdminLogin />} />
+                  <Route path="/admin/login" element={<AdminLogin />} />
                   <Route
                     path="/admin"
                     element={

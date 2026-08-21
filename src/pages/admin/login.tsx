@@ -14,7 +14,7 @@ export default function AdminLogin() {
 
   useEffect(() => {
     if (!authLoading && isAuthenticated) {
-      navigate("/admin/orders", { replace: true });
+      navigate("/admin", { replace: true });
     }
   }, [isAuthenticated, authLoading, navigate]);
 
@@ -24,7 +24,7 @@ export default function AdminLogin() {
     setError("");
     const result = await login(code);
     if (result.success) {
-      navigate("/admin/orders", { replace: true });
+      navigate("/admin", { replace: true });
     } else {
       setError(result.error ?? "Invalid access code. Try COREDEVELOPER1991 or admin123");
     }
