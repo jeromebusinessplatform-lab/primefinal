@@ -1,3 +1,10 @@
+export interface BundleItemConfig {
+  productId: string;
+  pricingType: "fixed" | "percentage_off";
+  customPrice?: number;
+  discountPercent?: number;
+}
+
 export interface Product {
   _id: string;
   name: string;
@@ -6,12 +13,38 @@ export interface Product {
   image?: string;
   price: number;
   salePrice?: number;
+  costing?: number; // Base item costing
   stock: number;
   available: boolean;
   badge?: "NEW" | "SALE" | "LOW_STOCK";
+  badgeExpiry?: string; // ISO date string or YYYY-MM-DDTHH:mm
   category?: string;
   sortOrder?: number;
+
+  // Combination / Bundle configuration
+  isCombination?: boolean;
+  bundleItems?: BundleItemConfig[];
+  bundleCalculatedPrice?: number;
 }
+
+export function isBadgeActive(badge?: string, badgeExpiry?: string): boolean {
+  if (!badge) return false;
+  if (!badgeExpiry) return true;
+  try {
+    const expiryTime = new Date(badgeExpiry).getTime();
+    if (isNaN(expiryTime)) return true;
+    return expiryTime > Date.now();
+  } catch {
+    return true;
+  }
+}
+
+export const INITIAL_CATEGORIES = [
+  "Audio",
+  "Smart Wearables",
+  "Cameras",
+  "Accessories",
+];
 
 export const INITIAL_PRODUCTS: Product[] = [
   {
@@ -126,11 +159,41 @@ export const INITIAL_PRODUCTS: Product[] = [
     subname: "Waterproof to 30m • EIS",
     description: "Ultra-wide lens action sports camera with dual screens and electronic image stabilization.",
     price: 199.99,
+    costing: 110.00,
     stock: 4,
     available: true,
     badge: "LOW_STOCK",
     category: "Cameras",
     image: "https://images.unsplash.com/photo-1565849904461-04a58ad377e0?w=600&auto=format&fit=crop&q=80",
     sortOrder: 9,
+  },
+  {
+    _id: "prod-combo-1",
+    name: "Creator Studio Duo Bundle",
+    subname: "Suggested Bundle • Save 22%",
+    description: "Special promotional bundle including Wireless Headphones and Power Bank at a discounted combination price.",
+    price: 159.98,
+    costing: 90.00,
+    stock: 12,
+    available: true,
+    badge: "SALE",
+    badgeExpiry: "2026-12-31T23:59",
+    category: "Audio",
+    image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=600&auto=format&fit=crop&q=80",
+    sortOrder: 10,
+    isCombination: true,
+    bundleItems: [
+      {
+        productId: "prod-2",
+        pricingType: "percentage_off",
+        discountPercent: 20,
+      },
+      {
+        productId: "prod-6",
+        pricingType: "fixed",
+        customPrice: 29.99,
+      }
+    ],
+    bundleCalculatedPrice: 149.98,
   }
 ];

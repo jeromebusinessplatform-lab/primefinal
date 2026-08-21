@@ -1,10 +1,10 @@
 import { useCart } from "@/context/CartContext.tsx";
-import { ShoppingCart, Minus, Plus, Search, ChevronDown, Check, Star, MessageSquare } from "lucide-react";
+import { ShoppingCart, Minus, Plus, Search, ChevronDown, Check, Star, MessageSquare, Sparkles, Layers, ArrowRight } from "lucide-react";
 import { useState, useMemo } from "react";
 import { useDebounce } from "@/hooks/use-debounce.ts";
 import { useProducts } from "@/hooks/useProducts.ts";
 import { useReviews } from "@/hooks/useReviews.ts";
-import { type Product } from "@/data/products.ts";
+import { type Product, isBadgeActive } from "@/data/products.ts";
 import { toast } from "sonner";
 import { formatCurrency } from "@/lib/utils.ts";
 import { ProductGridSkeleton } from "@/components/ProductCardSkeleton.tsx";
@@ -31,7 +31,7 @@ function BadgePill({ badge }: { badge: "NEW" | "SALE" | "LOW_STOCK" }) {
   );
 }
 
-function ProductCard({ product }: { product: Product; key?: string }) {
+function ProductCard({ product, allProducts }: { product: Product; allProducts?: Product[]; key?: string }) {
   const { items, addItem, updateQuantity } = useCart();
   const { getProductRatingSummary, getProductReviews } = useReviews();
   const ratingSummary = getProductRatingSummary(product._id);
@@ -40,6 +40,7 @@ function ProductCard({ product }: { product: Product; key?: string }) {
   const cartItem = items.find((i) => i.productId === product._id);
   const [showQuantity, setShowQuantity] = useState(!!cartItem);
   const [showReviewsDrawer, setShowReviewsDrawer] = useState(false);
+  const [showBundleDrawer, setShowBundleDrawer] = useState(false);
   const [localQty, setLocalQty] = useState<number>(() => {
     if (cartItem) return cartItem.quantity;
     return 1;
@@ -47,6 +48,7 @@ function ProductCard({ product }: { product: Product; key?: string }) {
 
   const unitPrice = product.salePrice ?? product.price;
   const isOutOfStock = product.stock <= 0;
+  const isBadgeValid = isBadgeActive(product.badge, product.badgeExpiry);
 
   const handleAddToCart = () => {
     if (isOutOfStock) return;
@@ -87,7 +89,7 @@ function ProductCard({ product }: { product: Product; key?: string }) {
   return (
     <div
       className={`bg-white rounded-2xl border transition-all duration-200 flex flex-col justify-between overflow-hidden shadow-xs hover:shadow-md ${
-        isOutOfStock ? "opacity-60 border-neutral-200" : "border-neutral-200/90"
+        isOutOfStock ? "opacity-60 border-neutral-200" : product.isCombination ? "border-amber-300 ring-1 ring-amber-200/60" : "border-neutral-200/90"
       }`}
     >
       {/* Product Image & Badge Area */}
@@ -106,10 +108,23 @@ function ProductCard({ product }: { product: Product; key?: string }) {
           </div>
         )}
 
-        {/* Badge */}
-        {product.badge && !isOutOfStock && (
+        {/* Dynamic Badge (Honors Custom Expiry) */}
+        {product.badge && isBadgeValid && !isOutOfStock && (
           <div className="absolute top-2 left-2 z-10">
             <BadgePill badge={product.badge} />
+          </div>
+        )}
+
+        {/* Suggested Bundle Tag */}
+        {product.isCombination && (
+          <div className="absolute top-2 right-2 z-10">
+            <span
+              onClick={() => setShowBundleDrawer(true)}
+              className="bg-amber-100/95 text-amber-900 border border-amber-300 text-[9px] font-bold px-2 py-0.5 rounded-full uppercase leading-none shadow-xs flex items-center gap-0.5 cursor-pointer hover:bg-amber-200 transition-colors"
+              style={{ fontFamily: "'Roboto Condensed', sans-serif" }}
+            >
+              <Sparkles size={9} className="text-amber-600" /> Suggested Bundle
+            </span>
           </div>
         )}
 
@@ -150,6 +165,21 @@ function ProductCard({ product }: { product: Product; key?: string }) {
             </p>
           )}
 
+          {/* Suggested Bundle preview pill */}
+          {product.isCombination && product.bundleItems && product.bundleItems.length > 0 && (
+            <button
+              type="button"
+              onClick={() => setShowBundleDrawer(true)}
+              className="mt-1 w-full text-left bg-amber-50/90 border border-amber-200/90 rounded-lg p-1.5 flex items-center justify-between text-[10px] text-amber-900 font-normal hover:bg-amber-100 transition-colors cursor-pointer"
+            >
+              <span className="flex items-center gap-1 font-medium truncate">
+                <Layers size={10} className="text-amber-600 shrink-0" />
+                Includes {product.bundleItems.length} items
+              </span>
+              <span className="text-amber-700 underline shrink-0">View Bundle &gt;</span>
+            </button>
+          )}
+
           {/* Aggregate Star Rating & Reviews Badge */}
           <div
             className="mt-1 flex items-center gap-1 cursor-pointer group"
@@ -176,7 +206,7 @@ function ProductCard({ product }: { product: Product; key?: string }) {
             >
               {formatCurrency(unitPrice)}
             </span>
-            {product.salePrice && (
+            {product.salePrice && !product.isCombination && (
               <span
                 className="text-[#ef4444] font-normal line-through"
                 style={{
@@ -234,6 +264,126 @@ function ProductCard({ product }: { product: Product; key?: string }) {
           )}
         </div>
       </div>
+
+      {/* Suggested Bundle Details Modal */}
+      {showBundleDrawer && product.isCombination && product.bundleItems && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs"
+          onClick={() => setShowBundleDrawer(false)}
+        >
+          <div
+            className="bg-white w-full max-w-md rounded-2xl border border-neutral-200 shadow-2xl p-5 space-y-4 text-left"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between border-b border-neutral-100 pb-3">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-amber-500 text-white flex items-center justify-center">
+                  <Sparkles size={16} />
+                </div>
+                <div>
+                  <h4
+                    className="text-base font-normal uppercase text-black"
+                    style={{ fontFamily: "'Roboto Condensed', sans-serif" }}
+                  >
+                    Suggested Bundle Offer
+                  </h4>
+                  <p className="text-xs text-neutral-500 font-normal">
+                    {product.name}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowBundleDrawer(false)}
+                className="text-xs border border-neutral-200 px-2 py-1 rounded-lg hover:bg-neutral-100 text-neutral-600 cursor-pointer"
+              >
+                Close
+              </button>
+            </div>
+
+            <div className="space-y-2 max-h-[50vh] overflow-y-auto pr-1">
+              <div className="text-xs font-semibold text-neutral-800 uppercase" style={{ fontFamily: "'Roboto Condensed', sans-serif" }}>
+                Products Included in This Combination:
+              </div>
+              {product.bundleItems.map((item, idx) => {
+                const itemProd = allProducts?.find((p) => p._id === item.productId);
+                const origPrice = itemProd ? itemProd.salePrice ?? itemProd.price : 0;
+                const bundlePrice =
+                  item.pricingType === "fixed"
+                    ? item.customPrice ?? origPrice
+                    : origPrice * (1 - (item.discountPercent ?? 0) / 100);
+
+                return (
+                  <div
+                    key={idx}
+                    className="p-2.5 bg-neutral-50 rounded-xl border border-neutral-200/80 flex items-center gap-3"
+                  >
+                    <div className="w-12 h-12 rounded-lg bg-white border border-neutral-200 p-1 shrink-0 flex items-center justify-center overflow-hidden">
+                      {itemProd?.image ? (
+                        <img
+                          src={itemProd.image}
+                          alt={itemProd.name}
+                          className="w-full h-full object-contain"
+                          referrerPolicy="no-referrer"
+                        />
+                      ) : (
+                        <ShoppingCart size={16} className="text-neutral-300" />
+                      )}
+                    </div>
+
+                    <div className="flex-1 min-w-0">
+                      <div className="text-xs font-semibold text-neutral-900 truncate">
+                        {itemProd?.name ?? "Combined Product"}
+                      </div>
+                      <div className="text-[11px] text-neutral-500">
+                        {item.pricingType === "percentage_off" ? (
+                          <span className="text-emerald-700 font-medium font-mono">
+                            {item.discountPercent}% Promotional Discount
+                          </span>
+                        ) : (
+                          <span className="text-blue-700 font-medium font-mono">
+                            Special Bundle Price
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="text-right shrink-0">
+                      <div className="text-xs font-bold text-black font-mono">
+                        {formatCurrency(bundlePrice)}
+                      </div>
+                      <div className="text-[10px] text-neutral-400 line-through font-mono">
+                        {formatCurrency(origPrice)}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="p-3 bg-neutral-900 text-white rounded-xl flex items-center justify-between">
+              <div>
+                <div className="text-[10px] text-neutral-400 uppercase font-mono">Combination Price</div>
+                <div className="text-lg font-bold text-white font-mono">
+                  {formatCurrency(unitPrice)}
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  handleAddToCart();
+                  setShowBundleDrawer(false);
+                }}
+                className="bg-amber-400 hover:bg-amber-300 text-black font-semibold text-xs px-4 py-2 rounded-xl cursor-pointer shadow-md transition-colors"
+                style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
+              >
+                Add Complete Bundle to Cart
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Quick Customer Reviews Modal / Drawer */}
       {showReviewsDrawer && (
@@ -324,13 +474,12 @@ export default function ShopCatalog() {
   const [showCategoryMenu, setShowCategoryMenu] = useState(false);
   const [showFilterMenu, setShowFilterMenu] = useState(false);
 
-  const { products, loading } = useProducts();
+  const { products, categories: hookCategories, loading } = useProducts();
 
   const categories = useMemo(() => {
-    if (!products) return ["All Categories"];
-    const cats = Array.from(new Set(products.map((p) => p.category).filter(Boolean))) as string[];
-    return ["All Categories", ...cats.sort()];
-  }, [products]);
+    const combined = Array.from(new Set([...(hookCategories || []), ...products.map((p) => p.category).filter(Boolean)])) as string[];
+    return ["All Categories", ...combined.sort()];
+  }, [products, hookCategories]);
 
   const filtered = useMemo(() => {
     let list = products ?? [];
@@ -506,7 +655,7 @@ export default function ShopCatalog() {
         ) : (
           <div className="grid grid-cols-3 gap-2 sm:gap-2.5">
             {filtered.map((product) => (
-              <ProductCard key={product._id} product={product} />
+              <ProductCard key={product._id} product={product} allProducts={products} />
             ))}
           </div>
         )}
