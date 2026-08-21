@@ -13,7 +13,11 @@ export default function CourierPage() {
     minFare: 0,
     minDistanceInclusions: 4,
     perKmCharge: 0,
+    platformFeeEnabled: false,
     platformFee: 0,
+    nightDifferentialEnabled: false,
+    nightDifferentialFee: 0,
+    surchargeEnabled: false,
     surchargeFee: 0,
   });
   const [file, setFile] = useState<File | null>(null);
@@ -66,10 +70,9 @@ export default function CourierPage() {
     await addCourier({
       ...formData,
       logoUrl,
-      nightDifferentialEnabled: false,
       isAvailable: true,
     });
-    setFormData({ name: '', type: 'Standard', baseFare: 0, minFare: 0, minDistanceInclusions: 4, perKmCharge: 0, platformFee: 0, surchargeFee: 0 });
+    setFormData({ name: '', type: 'Standard', baseFare: 0, minFare: 0, minDistanceInclusions: 4, perKmCharge: 0, platformFeeEnabled: false, platformFee: 0, nightDifferentialEnabled: false, nightDifferentialFee: 0, surchargeEnabled: false, surchargeFee: 0 });
     setFile(null);
     setImageSrc(null);
   };
@@ -90,8 +93,22 @@ export default function CourierPage() {
             <input type="number" placeholder="Min Fare" value={formData.minFare} onChange={e => setFormData({...formData, minFare: Number(e.target.value)})} className="border p-2 rounded" />
             <input type="number" placeholder="Min Distance Inclusions (KM)" value={formData.minDistanceInclusions} onChange={e => setFormData({...formData, minDistanceInclusions: Number(e.target.value)})} className="border p-2 rounded" />
             <input type="number" placeholder="Excess Per KM" value={formData.perKmCharge} onChange={e => setFormData({...formData, perKmCharge: Number(e.target.value)})} className="border p-2 rounded" />
-            <input type="number" placeholder="Platform Fee" value={formData.platformFee} onChange={e => setFormData({...formData, platformFee: Number(e.target.value)})} className="border p-2 rounded" />
-            <input type="number" placeholder="Surcharge" value={formData.surchargeFee} onChange={e => setFormData({...formData, surchargeFee: Number(e.target.value)})} className="border p-2 rounded" />
+            
+            <div className="flex items-center gap-2">
+                <input type="checkbox" checked={formData.platformFeeEnabled} onChange={e => setFormData({...formData, platformFeeEnabled: e.target.checked})} />
+                <input type="number" placeholder="Platform Fee" value={formData.platformFee} onChange={e => setFormData({...formData, platformFee: Number(e.target.value)})} className="border p-2 rounded flex-1" />
+            </div>
+            
+            <div className="flex items-center gap-2">
+                <input type="checkbox" checked={formData.nightDifferentialEnabled} onChange={e => setFormData({...formData, nightDifferentialEnabled: e.target.checked})} />
+                <input type="number" placeholder="Night Diff Fee" value={formData.nightDifferentialFee} onChange={e => setFormData({...formData, nightDifferentialFee: Number(e.target.value)})} className="border p-2 rounded flex-1" />
+            </div>
+            
+            <div className="flex items-center gap-2">
+                <input type="checkbox" checked={formData.surchargeEnabled} onChange={e => setFormData({...formData, surchargeEnabled: e.target.checked})} />
+                <input type="number" placeholder="Surcharge Fee" value={formData.surchargeFee} onChange={e => setFormData({...formData, surchargeFee: Number(e.target.value)})} className="border p-2 rounded flex-1" />
+            </div>
+            
             <input type="file" onChange={handleFileChange} className="col-span-2" />
         </div>
         

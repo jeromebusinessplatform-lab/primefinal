@@ -38,7 +38,7 @@ export default function CheckoutPage() {
   const { items, subtotal, selectedItems, selectedSubtotal, removeSelectedItems, clearCart } = useCart();
   const { customer } = useTelegram();
   const { createOrder } = useOrders(customer?.telegramUserId);
-  const { couriers } = useCouriers();
+  const { couriers, calculateDeliveryCharge } = useCouriers();
   const navigate = useNavigate();
 
   // Active items being checked out
@@ -422,7 +422,7 @@ export default function CheckoutPage() {
                           setSelectedCourierId(c.id);
                           setShowPaymentPrompt(true);
                         }}
-                        className={`flex flex-col items-center p-2 rounded-xl border transition-all ${
+                        className={`relative flex flex-col items-center p-2 rounded-xl border transition-all ${
                           !c.isAvailable ? "bg-neutral-100 border-neutral-200 opacity-60 cursor-not-allowed" :
                           isSelected ? "border-black bg-neutral-900 text-white shadow-xs" : 
                           "border-neutral-200 bg-white hover:bg-neutral-50 text-neutral-800"
@@ -430,15 +430,19 @@ export default function CheckoutPage() {
                       >
                         {c.isAvailable ? (
                           <>
+                            <div className="absolute top-1 right-1 w-2 h-2 rounded-full bg-green-500" />
                             <img src={c.logoUrl} alt={c.name} className="w-8 h-8 object-contain mb-1" />
                             <div className={`text-[9px] font-semibold ${isSelected ? "text-white" : "text-black"}`}>
                               {formatCurrency(charge)}
                             </div>
                           </>
                         ) : (
-                          <div className="text-[8px] font-bold text-neutral-500 text-center uppercase leading-tight">
-                            UNAVAILABLE
-                          </div>
+                          <>
+                            <div className="absolute top-1 right-1 w-2 h-2 rounded-full bg-neutral-400" />
+                            <div className="text-[8px] font-bold text-neutral-500 text-center uppercase leading-tight">
+                              UNAVAILABLE
+                            </div>
+                          </>
                         )}
                       </button>
                     );
@@ -755,7 +759,7 @@ export default function CheckoutPage() {
                 <span className="font-normal text-neutral-900">{formatCurrency(estTax)}</span>
               </div>
               <div className="flex justify-between text-xs text-neutral-600 font-normal" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
-                <span>Priority Dispatch ({selectedCourier?.name})</span>
+                <span>Priority Dispatch ({selectedCourier?.name}) • <span className="text-[10px] bg-neutral-100 px-1 py-0.5 rounded">{paymentOption === 'PAY_AT_CHECKOUT' ? 'Pay at Checkout' : 'Pay upon Fulfillment'}</span></span>
                 <span className="font-normal text-neutral-900">
                   {shipping === 0 ? "FREE" : formatCurrency(shipping)}
                 </span>

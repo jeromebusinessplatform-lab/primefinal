@@ -8,8 +8,11 @@ export interface Courier {
   minFare: number;
   minDistanceInclusions: number; // in KM
   perKmCharge: number;
+  platformFeeEnabled: boolean;
   platformFee: number;
   nightDifferentialEnabled: boolean;
+  nightDifferentialFee: number;
+  surchargeEnabled: boolean;
   surchargeFee: number;
 }
 

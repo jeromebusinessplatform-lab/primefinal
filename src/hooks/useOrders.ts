@@ -52,6 +52,7 @@ export interface CustomerOrder {
   adminNotes?: string;
   receiptUrl?: string;
   receiptOcrData?: ReceiptOcrResult;
+  deliveryPaymentOption: 'PAY_AT_CHECKOUT' | 'PAY_UPON_FULFILLMENT';
 }
 
 export const INITIAL_ORDERS: CustomerOrder[] = [
@@ -93,6 +94,7 @@ export const INITIAL_ORDERS: CustomerOrder[] = [
     estimatedWaitingMinutes: 12,
     estimatedDispatchTime: "2:45 PM",
     adminNotes: "Customer requested contactless lobby drop-off.",
+    deliveryPaymentOption: 'PAY_AT_CHECKOUT',
   },
   {
     _id: "ord-1002",
@@ -124,6 +126,7 @@ export const INITIAL_ORDERS: CustomerOrder[] = [
     queuePosition: 2,
     estimatedWaitingMinutes: 20,
     estimatedDispatchTime: "3:10 PM",
+    deliveryPaymentOption: 'PAY_UPON_FULFILLMENT',
   },
 ];
 

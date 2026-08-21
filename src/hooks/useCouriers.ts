@@ -24,21 +24,34 @@ export function useCouriers() {
   const calculateDeliveryCharge = (courier: Courier, distanceKm: number) => {
     if (!courier.isAvailable) return 0;
     
-    // Formula: baseFare + max(0, distanceKm - minDistanceInclusions) * perKmCharge + platformFee + surchargeFee + (nightDiff ? 50 : 0)
+    // Formula: baseFare + max(0, distanceKm - minDistanceInclusions) * perKmCharge + platformFee + surchargeFee + (nightDiff ? fee : 0)
     let charge = courier.baseFare;
     
     const excessDistance = Math.max(0, distanceKm - courier.minDistanceInclusions);
     charge += excessDistance * courier.perKmCharge;
     
-    charge += courier.platformFee + courier.surchargeFee;
+    if (courier.platformFeeEnabled) {
+      charge += courier.platformFee;
+    }
     
-    // Night differential check (10 PM to 5 AM)
-    const hour = new Date().getHours();
+    if (courier.surchargeEnabled) {
+      charge += courier.surchargeFee;
+    }
+    
+    // Night differential check (10 PM to 5 AM, Manila time)
+    const manilaTime = new Intl.DateTimeFormat("en-US", {
+      timeZone: "Asia/Manila",
+      hour: "numeric",
+      hour12: false,
+    }).format(new Date());
+    
+    const hour = parseInt(manilaTime, 10);
+    
     if (courier.nightDifferentialEnabled && (hour >= 22 || hour < 5)) {
-      charge += 50;
+      charge += courier.nightDifferentialFee;
     }
 
-    return charge;
+    return Math.max(courier.minFare, charge);
   };
 
   const addCourier = async (courier: Omit<Courier, "id">) => {
