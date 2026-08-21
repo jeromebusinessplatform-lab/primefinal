@@ -1,12 +1,14 @@
 import { useCart } from "@/context/CartContext.tsx";
-import { ShoppingCart, Minus, Plus, Search, ChevronDown, Check } from "lucide-react";
+import { ShoppingCart, Minus, Plus, Search, ChevronDown, Check, Star, MessageSquare } from "lucide-react";
 import { useState, useMemo } from "react";
 import { useDebounce } from "@/hooks/use-debounce.ts";
 import { useProducts } from "@/hooks/useProducts.ts";
+import { useReviews } from "@/hooks/useReviews.ts";
 import { type Product } from "@/data/products.ts";
 import { toast } from "sonner";
 import { formatCurrency } from "@/lib/utils.ts";
 import { ProductGridSkeleton } from "@/components/ProductCardSkeleton.tsx";
+import { StarRating } from "@/components/StarRating.tsx";
 
 function BadgePill({ badge }: { badge: "NEW" | "SALE" | "LOW_STOCK" }) {
   const config = {
@@ -31,8 +33,13 @@ function BadgePill({ badge }: { badge: "NEW" | "SALE" | "LOW_STOCK" }) {
 
 function ProductCard({ product }: { product: Product; key?: string }) {
   const { items, addItem, updateQuantity } = useCart();
+  const { getProductRatingSummary, getProductReviews } = useReviews();
+  const ratingSummary = getProductRatingSummary(product._id);
+  const reviews = getProductReviews(product._id);
+
   const cartItem = items.find((i) => i.productId === product._id);
   const [showQuantity, setShowQuantity] = useState(!!cartItem);
+  const [showReviewsDrawer, setShowReviewsDrawer] = useState(false);
   const [localQty, setLocalQty] = useState<number>(() => {
     if (cartItem) return cartItem.quantity;
     return 1;
@@ -120,7 +127,7 @@ function ProductCard({ product }: { product: Product; key?: string }) {
       </div>
 
       {/* Product Info */}
-      <div className="p-1.5 flex flex-col flex-1 justify-between pt-0">
+      <div className="p-2 flex flex-col flex-1 justify-between pt-0 space-y-1">
         <div>
           <h3
             className="text-neutral-900 font-normal leading-tight line-clamp-1"
@@ -142,6 +149,21 @@ function ProductCard({ product }: { product: Product; key?: string }) {
               {product.subname}
             </p>
           )}
+
+          {/* Aggregate Star Rating & Reviews Badge */}
+          <div
+            className="mt-1 flex items-center gap-1 cursor-pointer group"
+            onClick={() => setShowReviewsDrawer(true)}
+            title="Click to view verified customer reviews"
+          >
+            <StarRating
+              rating={ratingSummary.averageRating}
+              size={11}
+              showScore={true}
+              showCount={true}
+              count={ratingSummary.totalReviews}
+            />
+          </div>
 
           {/* Pricing */}
           <div className="mt-1 flex items-baseline gap-1.5 flex-wrap">
@@ -212,6 +234,72 @@ function ProductCard({ product }: { product: Product; key?: string }) {
           )}
         </div>
       </div>
+
+      {/* Quick Customer Reviews Modal / Drawer */}
+      {showReviewsDrawer && (
+        <div
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-xs"
+          onClick={() => setShowReviewsDrawer(false)}
+        >
+          <div
+            className="bg-white w-full max-w-md rounded-t-2xl sm:rounded-2xl border border-neutral-200 shadow-2xl p-4 space-y-3 max-h-[80vh] flex flex-col text-left"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between border-b border-neutral-100 pb-2.5">
+              <div>
+                <h4 className="text-base font-normal uppercase text-black" style={{ fontFamily: "'Roboto Condensed', sans-serif" }}>
+                  Customer Reviews
+                </h4>
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  <StarRating rating={ratingSummary.averageRating} size={13} showScore={true} />
+                  <span className="text-xs text-neutral-500 font-mono">
+                    Based on {ratingSummary.totalReviews} verified ratings
+                  </span>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowReviewsDrawer(false)}
+                className="text-xs border border-neutral-200 px-2 py-1 rounded-lg hover:bg-neutral-100 text-neutral-600 cursor-pointer"
+              >
+                Close
+              </button>
+            </div>
+
+            <div className="overflow-y-auto space-y-2.5 flex-1 pr-1">
+              {reviews.length === 0 ? (
+                <div className="p-6 text-center text-neutral-400 text-xs font-normal" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
+                  No customer comments yet for this item. Place an order to be the first to review!
+                </div>
+              ) : (
+                reviews.map((rev) => (
+                  <div key={rev.id} className="p-2.5 bg-neutral-50 rounded-xl border border-neutral-200/70 space-y-1">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-semibold text-black">{rev.userName}</span>
+                      <span className="text-[10px] text-neutral-400 font-mono">
+                        {new Date(rev.createdAt).toLocaleDateString()}
+                      </span>
+                    </div>
+                    <StarRating rating={rev.rating} size={11} />
+                    <p className="text-xs text-neutral-700 italic" style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: "13px" }}>
+                      "{rev.comment}"
+                    </p>
+                    {rev.tags && rev.tags.length > 0 && (
+                      <div className="flex flex-wrap gap-1 pt-0.5">
+                        {rev.tags.map((t) => (
+                          <span key={t} className="text-[9px] bg-white border border-neutral-200 text-neutral-600 px-1.5 py-0.2 rounded">
+                            #{t}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

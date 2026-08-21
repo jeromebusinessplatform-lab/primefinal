@@ -17,9 +17,11 @@ interface CartContextType {
   toggleSelect: (productId: string) => void;
   selectAll: () => void;
   deselectAll: () => void;
+  removeSelectedItems: () => void;
   clearCart: () => void;
   selectedItems: CartItem[];
   totalItems: number;
+  selectedCount: number;
   subtotal: number;
   selectedSubtotal: number;
 }
@@ -93,10 +95,15 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     setItems((prev) => prev.map((i) => ({ ...i, selected: false })));
   }, []);
 
+  const removeSelectedItems = useCallback(() => {
+    setItems((prev) => prev.filter((i) => !i.selected));
+  }, []);
+
   const clearCart = useCallback(() => setItems([]), []);
 
   const selectedItems = items.filter((i) => i.selected);
   const totalItems = items.reduce((s, i) => s + i.quantity, 0);
+  const selectedCount = selectedItems.reduce((s, i) => s + i.quantity, 0);
   const subtotal = items.reduce((s, i) => s + i.unitPrice * i.quantity, 0);
   const selectedSubtotal = selectedItems.reduce((s, i) => s + i.unitPrice * i.quantity, 0);
 
@@ -110,9 +117,11 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         toggleSelect,
         selectAll,
         deselectAll,
+        removeSelectedItems,
         clearCart,
         selectedItems,
         totalItems,
+        selectedCount,
         subtotal,
         selectedSubtotal,
       }}

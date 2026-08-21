@@ -1,8 +1,12 @@
+import { useState } from "react";
 import { useTelegram } from "@/context/TelegramContext.tsx";
 import { useOrders, type CustomerOrder } from "@/hooks/useOrders.ts";
-import { Package, Clock, Truck } from "lucide-react";
+import { useReviews } from "@/hooks/useReviews.ts";
+import { Package, Clock, Truck, Star, MessageSquare, CheckCircle2, ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { formatCurrency } from "@/lib/utils.ts";
+import { StarRating } from "@/components/StarRating.tsx";
+import { ProductReviewModal } from "@/components/ProductReviewModal.tsx";
 
 const STATUS_LABELS: Record<string, string> = {
   REVIEW: "Under Review",
@@ -41,19 +45,57 @@ const STATUS_COLORS: Record<string, string> = {
 export default function OrdersPage() {
   const { customer } = useTelegram();
   const { orders, loading } = useOrders(customer?.telegramUserId);
+  const { reviews, getReviewForOrderItem } = useReviews();
+
+  // Review Modal State
+  const [reviewModalState, setReviewModalState] = useState<{
+    isOpen: boolean;
+    productId: string;
+    productName: string;
+    orderId: string;
+    orderNumber: string;
+    existingReview?: any;
+  }>({
+    isOpen: false,
+    productId: "",
+    productName: "",
+    orderId: "",
+    orderNumber: "",
+  });
+
+  const handleOpenReview = (order: CustomerOrder, item: CustomerOrder["items"][0]) => {
+    const existing = getReviewForOrderItem(order._id, item.productId);
+    setReviewModalState({
+      isOpen: true,
+      productId: item.productId,
+      productName: item.productName,
+      orderId: order._id,
+      orderNumber: order.orderNumber,
+      existingReview: existing,
+    });
+  };
 
   return (
     <div className="bg-[#f3f4f6] min-h-full pb-10">
-      <div className="bg-white border-b border-neutral-200 px-4 py-3">
-        <h1
-          className="text-black font-normal uppercase text-xl leading-tight"
-          style={{ fontFamily: "'Roboto Condensed', sans-serif" }}
+      <div className="bg-white border-b border-neutral-200 px-4 py-3 flex items-center justify-between">
+        <div>
+          <h1
+            className="text-black font-normal uppercase text-xl leading-tight"
+            style={{ fontFamily: "'Roboto Condensed', sans-serif" }}
+          >
+            MY ORDERS
+          </h1>
+          <p className="text-xs text-neutral-500 font-normal" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
+            Live order queue, fulfillment tracking & product reviews
+          </p>
+        </div>
+        <Link
+          to="/shop"
+          className="text-xs text-black border border-neutral-200 px-3 py-1.5 rounded-lg hover:bg-neutral-50 font-normal"
+          style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
         >
-          MY ORDERS
-        </h1>
-        <p className="text-xs text-neutral-500 font-normal" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
-          Live order queue & fulfillment tracking
-        </p>
+          Shop More
+        </Link>
       </div>
 
       {loading ? (
@@ -90,19 +132,19 @@ export default function OrdersPage() {
           {orders.map((order: CustomerOrder) => (
             <div
               key={order._id}
-              className="bg-white rounded-2xl border border-neutral-200/90 p-3.5 shadow-xs"
+              className="bg-white rounded-2xl border border-neutral-200/90 p-3.5 shadow-xs space-y-3"
             >
-              <div className="flex items-start justify-between mb-2">
+              <div className="flex items-start justify-between border-b border-neutral-100 pb-2.5">
                 <div>
                   <div
-                    className="text-black font-normal leading-tight"
+                    className="text-black font-normal leading-tight flex items-center gap-1.5"
                     style={{
                       fontFamily: "'Roboto Condensed', sans-serif",
                       fontSize: "17px",
                       letterSpacing: "0.5px",
                     }}
                   >
-                    #{order.orderNumber}
+                    <span>#{order.orderNumber}</span>
                   </div>
                   <div className="text-[11px] text-neutral-400 mt-0.5 font-normal" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
                     {new Date(order._creationTime).toLocaleDateString("en-US", {
@@ -127,24 +169,90 @@ export default function OrdersPage() {
                 </span>
               </div>
 
-              {/* Items summary */}
-              <div className="text-xs text-neutral-700 py-1 space-y-0.5 font-normal" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
-                {order.items.map((it, idx) => (
-                  <div key={idx} className="flex justify-between">
-                    <span className="truncate pr-2 font-normal">
-                      {it.quantity}x {it.productName}
-                    </span>
-                    <span className="font-normal text-neutral-900">{formatCurrency(it.subtotal)}</span>
-                  </div>
-                ))}
+              {/* Items summary with individual Star Rating & Comment trigger */}
+              <div className="space-y-2.5">
+                <div className="text-[11px] font-medium text-neutral-400 uppercase tracking-wider" style={{ fontFamily: "'Roboto Condensed', sans-serif" }}>
+                  Purchased Items & Reviews
+                </div>
+
+                <div className="divide-y divide-neutral-100 space-y-2">
+                  {order.items.map((it, idx) => {
+                    const review = getReviewForOrderItem(order._id, it.productId);
+
+                    return (
+                      <div key={idx} className="pt-2 first:pt-0 space-y-1.5">
+                        <div className="flex justify-between items-start text-xs font-normal" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
+                          <div className="pr-2 font-medium text-black">
+                            <span className="font-bold text-neutral-800">{it.quantity}x</span> {it.productName}
+                          </div>
+                          <span className="font-semibold text-neutral-900 shrink-0 font-mono">
+                            {formatCurrency(it.subtotal)}
+                          </span>
+                        </div>
+
+                        {/* Rating and Review action / preview */}
+                        {review ? (
+                          <div className="bg-amber-50/70 border border-amber-200/80 rounded-xl p-2.5 text-xs space-y-1">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-1.5">
+                                <StarRating rating={review.rating} size={13} showScore={true} />
+                                <span className="text-[10px] text-amber-900 font-bold font-mono">Your Review</span>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => handleOpenReview(order, it)}
+                                className="text-[11px] text-neutral-600 hover:text-black underline cursor-pointer"
+                                style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
+                              >
+                                Edit Review
+                              </button>
+                            </div>
+                            <p className="text-xs text-neutral-700 italic line-clamp-2" style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: "13px" }}>
+                              "{review.comment}"
+                            </p>
+                            {review.tags && review.tags.length > 0 && (
+                              <div className="flex flex-wrap gap-1 pt-0.5">
+                                {review.tags.map((tag) => (
+                                  <span
+                                    key={tag}
+                                    className="text-[9px] bg-white text-neutral-600 border border-amber-200 px-1.5 py-0.2 rounded-md font-mono"
+                                  >
+                                    #{tag}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="flex items-center justify-between bg-neutral-50 rounded-xl px-2.5 py-1.5 border border-neutral-200/70">
+                            <span className="text-[11px] text-neutral-500 flex items-center gap-1" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
+                              <Star size={11} className="text-amber-500 fill-amber-400" />
+                              Rate this product
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => handleOpenReview(order, it)}
+                              className="text-[11px] font-medium text-black bg-white hover:bg-neutral-100 border border-neutral-200 px-2.5 py-1 rounded-lg flex items-center gap-1 cursor-pointer transition shadow-2xs"
+                              style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
+                            >
+                              <MessageSquare size={11} className="text-neutral-700" />
+                              <span>Write Review</span>
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
 
-              <div className="flex items-center justify-between text-sm mt-2 pt-2 border-t border-neutral-100">
+              {/* Order total info */}
+              <div className="flex items-center justify-between text-sm pt-2 border-t border-neutral-100">
                 <span className="text-xs text-neutral-500 font-normal" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
-                  {order.items.reduce((s, i) => s + i.quantity, 0)} total items
+                  {order.items.reduce((s, i) => s + i.quantity, 0)} items total
                 </span>
                 <span
-                  className="text-black font-normal"
+                  className="text-black font-semibold font-mono"
                   style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: "18px" }}
                 >
                   {formatCurrency(order.total)}
@@ -152,7 +260,7 @@ export default function OrdersPage() {
               </div>
 
               {!["DELIVERED", "CANCELLED", "REJECTED"].includes(order.orderStatus) && (
-                <div className="mt-2.5 pt-2 border-t border-neutral-100 flex items-center justify-between text-xs text-neutral-600 bg-neutral-50/80 -mx-3.5 -mb-3.5 p-2.5 rounded-b-2xl font-normal" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
+                <div className="mt-2 pt-2 border-t border-neutral-100 flex items-center justify-between text-xs text-neutral-600 bg-neutral-50/80 -mx-3.5 -mb-3.5 p-2.5 rounded-b-2xl font-normal" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
                   <div className="flex items-center gap-1.5 font-normal">
                     <Clock size={13} className="text-orange-500" />
                     <span>
@@ -169,6 +277,20 @@ export default function OrdersPage() {
           ))}
         </div>
       )}
+
+      {/* Review Modal */}
+      <ProductReviewModal
+        isOpen={reviewModalState.isOpen}
+        onClose={() => setReviewModalState((prev) => ({ ...prev, isOpen: false }))}
+        productId={reviewModalState.productId}
+        productName={reviewModalState.productName}
+        orderId={reviewModalState.orderId}
+        orderNumber={reviewModalState.orderNumber}
+        userId={customer?.telegramUserId || "1085949511"}
+        userName={customer?.telegramDisplayName || "Marcus Vance"}
+        existingReview={reviewModalState.existingReview}
+      />
     </div>
   );
 }
+

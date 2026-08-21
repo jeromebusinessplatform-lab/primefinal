@@ -1,15 +1,38 @@
 import { useCart } from "@/context/CartContext.tsx";
-import { Trash2, Plus, Minus, ArrowRight, ShoppingBag } from "lucide-react";
+import { Trash2, Plus, Minus, ArrowRight, ShoppingBag, CheckSquare, Square, Info } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { formatCurrency } from "@/lib/utils.ts";
 
 export default function CartPage() {
-  const { items, updateQuantity, removeItem, totalItems, toggleSelect, subtotal } = useCart();
+  const {
+    items,
+    updateQuantity,
+    removeItem,
+    totalItems,
+    toggleSelect,
+    selectAll,
+    deselectAll,
+    selectedItems,
+    selectedCount,
+    selectedSubtotal,
+  } = useCart();
   const navigate = useNavigate();
 
-  const estTax = subtotal * 0.05;
-  const shipping = subtotal > 0 ? (subtotal > 150 ? 0 : 9.99) : 0;
-  const grandTotal = subtotal + estTax + shipping;
+  const allSelected = items.length > 0 && items.every((i) => i.selected);
+  const noneSelected = selectedItems.length === 0;
+
+  const handleToggleAll = () => {
+    if (allSelected) {
+      deselectAll();
+    } else {
+      selectAll();
+    }
+  };
+
+  const handleProceedCheckout = () => {
+    if (noneSelected) return;
+    navigate("/shop/checkout");
+  };
 
   return (
     <div className="bg-[#f3f4f6] min-h-full pb-10">
@@ -23,7 +46,7 @@ export default function CartPage() {
             SHOPPING CART
           </h1>
           <p className="text-xs text-neutral-500 font-normal" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
-            {totalItems} items selected
+            {selectedCount} of {totalItems} items selected for checkout
           </p>
         </div>
         <Link
@@ -57,18 +80,47 @@ export default function CartPage() {
         </div>
       ) : (
         <div className="p-3 space-y-3">
-          {/* Cart items list */}
+          {/* Master Select Bar */}
+          <div className="bg-white rounded-xl border border-neutral-200/90 px-3.5 py-2.5 shadow-2xs flex items-center justify-between">
+            <button
+              type="button"
+              onClick={handleToggleAll}
+              className="flex items-center gap-2 text-xs font-medium text-neutral-800 hover:text-black cursor-pointer select-none"
+              style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: "13px" }}
+            >
+              {allSelected ? (
+                <CheckSquare size={16} className="text-black" />
+              ) : (
+                <Square size={16} className="text-neutral-400" />
+              )}
+              <span>{allSelected ? "Deselect All Items" : `Select All (${items.length} items)`}</span>
+            </button>
+
+            <span
+              className="text-xs text-neutral-500 font-mono"
+              style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
+            >
+              {selectedItems.length} product{selectedItems.length === 1 ? "" : "s"} selected
+            </span>
+          </div>
+
+          {/* Cart items list with individual checkout checkboxes */}
           <div className="bg-white rounded-2xl border border-neutral-200/90 p-3 shadow-xs space-y-3">
             {items.map((item) => (
               <div
                 key={item.productId}
-                className="flex items-center gap-3 border-b border-neutral-100 pb-3 last:border-0 last:pb-0"
+                className={`flex items-center gap-3 border-b border-neutral-100 pb-3 last:border-0 last:pb-0 transition-opacity ${
+                  item.selected ? "opacity-100" : "opacity-60 bg-neutral-50/50 -mx-1 px-1 rounded-lg"
+                }`}
               >
+                {/* Item Select Checkbox */}
                 <input
                   type="checkbox"
+                  id={`cart-item-${item.productId}`}
                   checked={item.selected}
                   onChange={() => toggleSelect(item.productId)}
-                  className="w-4 h-4 rounded border-neutral-300 text-black focus:ring-black cursor-pointer accent-black"
+                  className="w-4 h-4 rounded border-neutral-300 text-black focus:ring-black cursor-pointer accent-black shrink-0"
+                  aria-label={`Select ${item.productName} for checkout`}
                 />
 
                 {/* Image */}
@@ -87,12 +139,22 @@ export default function CartPage() {
 
                 {/* Info */}
                 <div className="flex-1 min-w-0">
-                  <h3
-                    className="font-normal text-neutral-900 text-sm truncate"
-                    style={{ fontFamily: "'Roboto Condensed', sans-serif" }}
-                  >
-                    {item.productName}
-                  </h3>
+                  <div className="flex items-start justify-between gap-1">
+                    <h3
+                      className="font-normal text-neutral-900 text-sm truncate"
+                      style={{ fontFamily: "'Roboto Condensed', sans-serif" }}
+                    >
+                      {item.productName}
+                    </h3>
+                    <button
+                      onClick={() => removeItem(item.productId)}
+                      className="text-neutral-300 hover:text-red-500 p-0.5 cursor-pointer transition-colors"
+                      title="Remove item"
+                    >
+                      <Trash2 size={13} />
+                    </button>
+                  </div>
+
                   <div
                     className="text-xs text-black font-normal mt-0.5"
                     style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
@@ -100,17 +162,18 @@ export default function CartPage() {
                     {formatCurrency(item.unitPrice)} each
                   </div>
 
-                  {/* Quantity Stepper & Remove */}
+                  {/* Quantity Stepper & Subtotal preview */}
                   <div className="mt-2 flex items-center justify-between">
                     <div className="h-6 border border-neutral-200 rounded-md flex items-center bg-neutral-50 overflow-hidden">
                       <button
                         onClick={() => updateQuantity(item.productId, item.quantity - 1)}
                         className="px-2 h-full text-neutral-600 hover:bg-neutral-200 active:bg-neutral-300 cursor-pointer"
+                        aria-label="Decrease quantity"
                       >
                         <Minus size={10} className="stroke-[2.5]" />
                       </button>
                       <span
-                        className="px-2 text-xs font-normal text-black"
+                        className="px-2 text-xs font-normal text-black font-mono"
                         style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
                       >
                         {item.quantity}
@@ -118,69 +181,70 @@ export default function CartPage() {
                       <button
                         onClick={() => updateQuantity(item.productId, item.quantity + 1)}
                         className="px-2 h-full text-neutral-600 hover:bg-neutral-200 active:bg-neutral-300 cursor-pointer"
+                        aria-label="Increase quantity"
                       >
                         <Plus size={10} className="stroke-[2.5]" />
                       </button>
                     </div>
 
-                    <button
-                      onClick={() => removeItem(item.productId)}
-                      className="text-neutral-400 hover:text-red-500 p-1 cursor-pointer transition-colors"
-                      title="Remove item"
+                    <div
+                      className="text-xs font-semibold text-neutral-900 font-mono"
+                      style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
                     >
-                      <Trash2 size={14} />
-                    </button>
+                      {formatCurrency(item.unitPrice * item.quantity)}
+                    </div>
                   </div>
                 </div>
               </div>
             ))}
           </div>
 
-          {/* Pricing summary */}
+          {/* Pricing summary - ONLY Subtotal displayed as requested */}
           <div className="bg-white rounded-2xl border border-neutral-200/90 p-4 shadow-xs space-y-2">
-            <div className="flex justify-between text-xs text-neutral-600 font-normal" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
-              <span>Subtotal ({totalItems} items)</span>
-              <span className="font-normal text-neutral-900">{formatCurrency(subtotal)}</span>
-            </div>
-            <div className="flex justify-between text-xs text-neutral-600 font-normal" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
-              <span>Estimated Tax (5%)</span>
-              <span className="font-normal text-neutral-900">{formatCurrency(estTax)}</span>
-            </div>
-            <div className="flex justify-between text-xs text-neutral-600 font-normal" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
-              <span>Delivery Fee</span>
-              <span className="font-normal text-neutral-900">
-                {shipping === 0 ? "FREE" : formatCurrency(shipping)}
-              </span>
-            </div>
-            <div className="pt-2 border-t border-neutral-100 flex justify-between items-baseline">
+            <div className="flex justify-between items-baseline">
               <span
-                className="text-sm font-normal text-black"
+                className="text-sm font-normal text-neutral-700 uppercase"
                 style={{ fontFamily: "'Roboto Condensed', sans-serif" }}
               >
-                ESTIMATED TOTAL
+                Cart Subtotal ({selectedCount} item{selectedCount === 1 ? "" : "s"} selected)
               </span>
               <span
-                className="text-xl font-normal text-black"
-                style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
+                className="text-xl font-bold text-black font-mono"
+                style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: "20px" }}
               >
-                {formatCurrency(grandTotal)}
+                {formatCurrency(selectedSubtotal)}
               </span>
             </div>
+
+            {items.some((i) => !i.selected) && (
+              <div className="flex items-center gap-1.5 text-[11px] text-neutral-500 pt-1 border-t border-neutral-100">
+                <Info size={12} className="text-neutral-400 shrink-0" />
+                <span>Unselected items will remain in your cart for later purchase.</span>
+              </div>
+            )}
           </div>
 
+          {noneSelected ? (
+            <div className="p-3 bg-amber-50 border border-amber-200/80 rounded-xl text-center text-xs text-amber-800 font-medium">
+              Please select at least 1 item to proceed to checkout
+            </div>
+          ) : null}
+
           <button
-            onClick={() => navigate("/shop/checkout")}
-            className="w-full bg-black hover:bg-neutral-800 text-white font-normal py-3 rounded-xl flex items-center justify-center gap-2 cursor-pointer shadow-xs transition-all"
+            onClick={handleProceedCheckout}
+            disabled={noneSelected}
+            className="w-full bg-black hover:bg-neutral-800 disabled:bg-neutral-300 disabled:cursor-not-allowed text-white font-normal py-3 rounded-xl flex items-center justify-center gap-2 cursor-pointer shadow-xs transition-all"
             style={{
               fontFamily: "'Barlow Condensed', sans-serif",
               fontSize: "15px",
               letterSpacing: "0.5px",
             }}
           >
-            PROCEED TO SECURE CHECKOUT <ArrowRight size={14} />
+            PROCEED TO CHECKOUT ({selectedCount} ITEMS • {formatCurrency(selectedSubtotal)}) <ArrowRight size={14} />
           </button>
         </div>
       )}
     </div>
   );
 }
+

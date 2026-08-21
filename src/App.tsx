@@ -24,6 +24,7 @@ import AdminLogisticsPage from "./pages/admin/logistics.tsx";
 import AdminProductsPage from "./pages/admin/products.tsx";
 import AdminSettingsPage from "./pages/admin/settings.tsx";
 import AdminReceiptOcrPage from "./pages/admin/receipt-ocr.tsx";
+import AdminAnalyticsPage from "./pages/admin/analytics.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 function AdminGuard({ children }: { children: ReactNode }) {
@@ -66,6 +67,7 @@ export default function App() {
                     }
                   >
                     <Route path="orders" element={<AdminOrdersPage />} />
+                    <Route path="analytics" element={<AdminAnalyticsPage />} />
                     <Route path="ocr" element={<AdminReceiptOcrPage />} />
                     <Route path="logistics" element={<AdminLogisticsPage />} />
                     <Route path="products" element={<AdminProductsPage />} />

@@ -35,11 +35,15 @@ import { formatCurrency } from "@/lib/utils.ts";
 type CheckoutStep = 1 | 2 | 3;
 
 export default function CheckoutPage() {
-  const { items, subtotal, clearCart } = useCart();
+  const { items, subtotal, selectedItems, selectedSubtotal, removeSelectedItems, clearCart } = useCart();
   const { customer } = useTelegram();
   const { createOrder } = useOrders(customer?.telegramUserId);
   const { couriers } = useCouriers();
   const navigate = useNavigate();
+
+  // Active items being checked out
+  const itemsToCheckout = selectedItems.length > 0 ? selectedItems : items;
+  const activeSubtotal = selectedItems.length > 0 ? selectedSubtotal : subtotal;
 
   // Multi-step State
   const [currentStep, setCurrentStep] = useState<CheckoutStep>(1);
@@ -82,7 +86,7 @@ export default function CheckoutPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const selectedCourier = couriers.find((c) => c._id === selectedCourierId) || couriers[0];
-  const estTax = subtotal * 0.05;
+  const estTax = activeSubtotal * 0.05;
 
   // Calculate dynamic courier shipping fee with Geoapify route distance
   const baseCourierFare = selectedCourier?.baseFare ?? 50;
@@ -92,8 +96,8 @@ export default function CheckoutPage() {
   const excessDistanceKm = Math.max(0, actualDistanceKm - minCourierCoverage);
   const calculatedCourierFee = Math.round(baseCourierFare + excessDistanceKm * excessKmRate);
 
-  const shipping = subtotal > 0 ? (subtotal > 2500 ? 0 : calculatedCourierFee) : 0;
-  const grandTotal = subtotal + estTax + shipping;
+  const shipping = activeSubtotal > 0 ? (activeSubtotal > 2500 ? 0 : calculatedCourierFee) : 0;
+  const grandTotal = activeSubtotal + estTax + shipping;
 
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -158,7 +162,7 @@ export default function CheckoutPage() {
       const randomNum = Math.floor(1000 + Math.random() * 9000);
       const generatedOrderNumber = `PRIME-${randomNum}`;
 
-      const orderItems = items.map((it) => ({
+      const orderItems = itemsToCheckout.map((it) => ({
         productId: it.productId,
         productName: it.productName,
         quantity: it.quantity,
@@ -172,7 +176,7 @@ export default function CheckoutPage() {
         telegramDisplayName: customer?.telegramDisplayName || recipientName,
         telegramUsername: customer?.telegramUsername || "marcus_v",
         items: orderItems,
-        subtotal,
+        subtotal: activeSubtotal,
         discount: 0,
         deliveryFee: shipping,
         total: grandTotal,
@@ -191,7 +195,12 @@ export default function CheckoutPage() {
         receiptOcrData: ocrResult || undefined,
       });
 
-      clearCart();
+      // Remove only the purchased items, preserving unselected items for future use
+      if (selectedItems.length > 0) {
+        removeSelectedItems();
+      } else {
+        clearCart();
+      }
       toast.success("Order confirmed successfully!");
       navigate(`/shop/order-confirmation/${generatedOrderNumber}`, {
         state: {
@@ -209,24 +218,24 @@ export default function CheckoutPage() {
     }
   };
 
-  if (items.length === 0) {
+  if (itemsToCheckout.length === 0) {
     return (
       <div className="bg-[#f3f4f6] min-h-full p-6 text-center py-20">
         <div className="w-16 h-16 bg-neutral-200/60 rounded-full flex items-center justify-center mx-auto mb-3">
           <ShoppingBag size={28} className="text-neutral-500" />
         </div>
         <h2 className="text-xl font-normal text-neutral-800 uppercase" style={{ fontFamily: "'Roboto Condensed', sans-serif" }}>
-          Your cart is empty
+          No items selected for checkout
         </h2>
         <p className="text-xs text-neutral-500 font-normal mt-1 mb-4" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
-          Add products to your cart before proceeding to checkout.
+          Select products in your cart or browse the catalog before proceeding to checkout.
         </p>
         <Link
-          to="/shop"
+          to="/shop/cart"
           className="inline-block bg-black text-white px-5 py-2.5 rounded-xl text-sm font-normal shadow-xs hover:bg-neutral-800 transition-colors"
           style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
         >
-          Return to Shop Catalog
+          Return to Cart
         </Link>
       </div>
     );
@@ -621,19 +630,19 @@ export default function CheckoutPage() {
               <div className="flex items-center justify-between pb-2 border-b border-neutral-100">
                 <div className="flex items-center gap-2 text-black font-normal text-sm uppercase">
                   <ShoppingBag size={16} className="text-neutral-800" />
-                  <span style={{ fontFamily: "'Roboto Condensed', sans-serif" }}>Order Items ({items.length})</span>
+                  <span style={{ fontFamily: "'Roboto Condensed', sans-serif" }}>Selected Order Items ({itemsToCheckout.length})</span>
                 </div>
                 <Link
                   to="/shop/cart"
                   className="text-xs text-neutral-500 hover:text-black flex items-center gap-1 font-normal underline"
                   style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
                 >
-                  Edit Cart
+                  Edit Cart Selection
                 </Link>
               </div>
 
               <div className="divide-y divide-neutral-100 max-h-48 overflow-y-auto pr-1">
-                {items.map((item) => (
+                {itemsToCheckout.map((item) => (
                   <div key={item.productId} className="py-2 flex items-center justify-between gap-2 first:pt-0 last:pb-0">
                     <div className="flex items-center gap-2.5 truncate">
                       {item.image ? (

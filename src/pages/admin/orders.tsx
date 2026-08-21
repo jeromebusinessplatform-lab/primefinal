@@ -17,6 +17,9 @@ import {
   Building,
   ShieldCheck,
   Upload,
+  TrendingUp,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { useOrders, type CustomerOrder, type OrderStatus } from "@/hooks/useOrders.ts";
 import { ReceiptOcrScanner } from "@/components/ReceiptOcrScanner.tsx";
@@ -24,6 +27,7 @@ import { analyzeReceiptImage } from "@/lib/ocr.ts";
 import type { ReceiptOcrResult } from "@/types/ocr.ts";
 import { toast } from "sonner";
 import { formatCurrency } from "@/lib/utils.ts";
+import { SalesPerformanceChart } from "@/components/admin/SalesPerformanceChart.tsx";
 
 const STATUS_LABELS: Record<OrderStatus, string> = {
   REVIEW: "Under Review",
@@ -66,6 +70,7 @@ export default function AdminOrdersPage() {
   const [selectedOrder, setSelectedOrder] = useState<CustomerOrder | null>(null);
   const [isScanningOcr, setIsScanningOcr] = useState(false);
   const [copiedRef, setCopiedRef] = useState(false);
+  const [showSalesAnalytics, setShowSalesAnalytics] = useState(true);
 
   const filteredOrders = useMemo(() => {
     return orders.filter((o) => {
@@ -155,6 +160,16 @@ export default function AdminOrdersPage() {
         </div>
 
         <div className="flex items-center gap-3">
+          <button
+            onClick={() => setShowSalesAnalytics((prev) => !prev)}
+            className="flex items-center gap-1.5 bg-black hover:bg-neutral-800 text-white text-xs px-3 py-2 rounded-xl transition cursor-pointer font-normal shadow-2xs"
+            style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
+          >
+            <TrendingUp size={13} />
+            <span>{showSalesAnalytics ? "Hide Sales Chart" : "Show 30-Day Sales Chart"}</span>
+            {showSalesAnalytics ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+          </button>
+
           <div className="bg-white border border-neutral-200 rounded-xl px-3.5 py-1.5 flex items-center gap-2">
             <span className="text-neutral-500 text-xs font-normal" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>Active Orders:</span>
             <span className="text-black font-semibold text-sm" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>{orders.length}</span>
@@ -169,6 +184,13 @@ export default function AdminOrdersPage() {
           </button>
         </div>
       </div>
+
+      {/* 30-Day Sales Performance Visualization */}
+      {showSalesAnalytics && (
+        <div className="transition-all duration-300">
+          <SalesPerformanceChart />
+        </div>
+      )}
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <div className="bg-white border border-neutral-200 rounded-xl p-3.5 shadow-2xs">
