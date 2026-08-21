@@ -24,10 +24,11 @@ export function useCouriers() {
   const calculateDeliveryCharge = (courier: Courier, distanceKm: number) => {
     if (!courier.isAvailable) return 0;
     
-    // Formula: baseFare + max(0, distanceKm - minDistanceInclusions) * perKmCharge + platformFee + surchargeFee + (nightDiff ? fee : 0)
+    // Formula: baseFare + (excessKm * perKmCharge) + platformFee + surchargeFee + (nightDiff ? fee : 0)
     let charge = courier.baseFare;
     
-    const excessDistance = Math.max(0, distanceKm - courier.minDistanceInclusions);
+    // Excess KM applies only to distance exceeding baseDistanceKm
+    const excessDistance = Math.max(0, distanceKm - courier.baseDistanceKm);
     charge += excessDistance * courier.perKmCharge;
     
     if (courier.platformFeeEnabled) {
@@ -51,7 +52,7 @@ export function useCouriers() {
       charge += courier.nightDifferentialFee;
     }
 
-    return Math.max(courier.minFare, charge);
+    return Math.round(charge * 100) / 100;
   };
 
   const addCourier = async (courier: Omit<Courier, "id">) => {

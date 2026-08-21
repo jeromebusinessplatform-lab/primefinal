@@ -1,12 +1,10 @@
 export interface Courier {
   id: string;
   name: string;
-  type: 'Standard' | 'Express' | 'Priority';
   logoUrl: string;
   isAvailable: boolean;
   baseFare: number;
-  minFare: number;
-  minDistanceInclusions: number; // in KM
+  baseDistanceKm: number; // Defaults to 4
   perKmCharge: number;
   platformFeeEnabled: boolean;
   platformFee: number;
@@ -14,9 +12,10 @@ export interface Courier {
   nightDifferentialFee: number;
   surchargeEnabled: boolean;
   surchargeFee: number;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface DeliveryCharge {
   totalAmount: number;
-  paymentOption: 'PAY_AT_CHECKOUT' | 'PAY_UPON_FULFILLMENT';
 }

@@ -1,17 +1,15 @@
 import React, { useState, useCallback } from 'react';
-import { useCouriers } from '../../hooks/useCouriers';
-import { storage } from '../../lib/firebase';
+import { useCouriers } from '@/hooks/useCouriers';
+import { storage } from '@/lib/firebase';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import Cropper, { Area } from 'react-easy-crop';
 
 export default function CourierPage() {
-  const { couriers, addCourier, removeCourier } = useCouriers();
+  const { couriers, updateCourier, addCourier, removeCourier } = useCouriers();
   const [formData, setFormData] = useState({
     name: '',
-    type: 'Standard' as 'Standard' | 'Express' | 'Priority',
     baseFare: 0,
-    minFare: 0,
-    minDistanceInclusions: 4,
+    baseDistanceKm: 4,
     perKmCharge: 0,
     platformFeeEnabled: false,
     platformFee: 0,
@@ -72,7 +70,7 @@ export default function CourierPage() {
       logoUrl,
       isAvailable: true,
     });
-    setFormData({ name: '', type: 'Standard', baseFare: 0, minFare: 0, minDistanceInclusions: 4, perKmCharge: 0, platformFeeEnabled: false, platformFee: 0, nightDifferentialEnabled: false, nightDifferentialFee: 0, surchargeEnabled: false, surchargeFee: 0 });
+    setFormData({ name: '', baseFare: 0, baseDistanceKm: 4, perKmCharge: 0, platformFeeEnabled: false, platformFee: 0, nightDifferentialEnabled: false, nightDifferentialFee: 0, surchargeEnabled: false, surchargeFee: 0 });
     setFile(null);
     setImageSrc(null);
   };
@@ -83,16 +81,10 @@ export default function CourierPage() {
       <div className="bg-white p-4 rounded-xl shadow mb-6">
         <h2 className="text-lg font-medium mb-4">Add New Courier</h2>
         <div className="grid grid-cols-2 gap-4">
-            <input type="text" placeholder="Name" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="border p-2 rounded" />
-            <select value={formData.type} onChange={e => setFormData({...formData, type: e.target.value as any})} className="border p-2 rounded">
-                <option value="Standard">Standard</option>
-                <option value="Express">Express</option>
-                <option value="Priority">Priority</option>
-            </select>
+            <input type="text" placeholder="Name" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="border p-2 rounded col-span-2" />
             <input type="number" placeholder="Base Fare" value={formData.baseFare} onChange={e => setFormData({...formData, baseFare: Number(e.target.value)})} className="border p-2 rounded" />
-            <input type="number" placeholder="Min Fare" value={formData.minFare} onChange={e => setFormData({...formData, minFare: Number(e.target.value)})} className="border p-2 rounded" />
-            <input type="number" placeholder="Min Distance Inclusions (KM)" value={formData.minDistanceInclusions} onChange={e => setFormData({...formData, minDistanceInclusions: Number(e.target.value)})} className="border p-2 rounded" />
-            <input type="number" placeholder="Excess Per KM" value={formData.perKmCharge} onChange={e => setFormData({...formData, perKmCharge: Number(e.target.value)})} className="border p-2 rounded" />
+            <input type="number" placeholder="Base Distance (KM)" value={formData.baseDistanceKm} onChange={e => setFormData({...formData, baseDistanceKm: Number(e.target.value)})} className="border p-2 rounded" />
+            <input type="number" placeholder="Per KM Charge" value={formData.perKmCharge} onChange={e => setFormData({...formData, perKmCharge: Number(e.target.value)})} className="border p-2 rounded" />
             
             <div className="flex items-center gap-2">
                 <input type="checkbox" checked={formData.platformFeeEnabled} onChange={e => setFormData({...formData, platformFeeEnabled: e.target.checked})} />
@@ -136,7 +128,9 @@ export default function CourierPage() {
                 <img src={c.logoUrl} alt={c.name} className='w-12 h-12 object-contain'/>
                 <div>
                     <div className='font-bold'>{c.name}</div>
-                    <div className='text-xs text-gray-500'>{c.type}</div>
+                    <button onClick={() => updateCourier(c.id, { isAvailable: !c.isAvailable })} className={`text-xs px-2 py-1 rounded ${c.isAvailable ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                        {c.isAvailable ? 'Available' : 'Unavailable'}
+                    </button>
                 </div>
             </div>
             <button onClick={() => removeCourier(c.id)} className="text-red-500">Remove</button>

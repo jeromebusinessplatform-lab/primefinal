@@ -188,6 +188,9 @@ export default function CheckoutPage() {
         contactNumber: phone,
         deliveryAddress: addressInput,
         courierName: selectedCourier?.name || "Priority Dispatch Express",
+        deliveryProviderId: selectedCourier?.id, // Added
+        deliveryCharge: shipping, // Added
+        deliveryPaymentMethod: paymentOption || 'PAY_AT_CHECKOUT', // Added
         paymentMethodName: paymentMethod === "TELEGRAM_PAY" ? "Telegram Pay" : "Direct Transfer OCR",
         paymentStatus: "CONFIRMED",
         orderStatus: "REVIEW",
@@ -197,7 +200,6 @@ export default function CheckoutPage() {
         adminNotes: notes || undefined,
         receiptUrl: receiptPreview || undefined,
         receiptOcrData: ocrResult || undefined,
-        deliveryPaymentOption: paymentOption || 'PAY_AT_CHECKOUT',
       });
 
       // Remove only the purchased items, preserving unselected items for future use
@@ -430,7 +432,7 @@ export default function CheckoutPage() {
                       >
                         {c.isAvailable ? (
                           <>
-                            <div className="absolute top-1 right-1 w-2 h-2 rounded-full bg-green-500" />
+                            <div className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-green-500" />
                             <img src={c.logoUrl} alt={c.name} className="w-8 h-8 object-contain mb-1" />
                             <div className={`text-[9px] font-semibold ${isSelected ? "text-white" : "text-black"}`}>
                               {formatCurrency(charge)}
@@ -438,7 +440,6 @@ export default function CheckoutPage() {
                           </>
                         ) : (
                           <>
-                            <div className="absolute top-1 right-1 w-2 h-2 rounded-full bg-neutral-400" />
                             <div className="text-[8px] font-bold text-neutral-500 text-center uppercase leading-tight">
                               UNAVAILABLE
                             </div>

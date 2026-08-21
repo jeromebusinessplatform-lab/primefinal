@@ -128,6 +128,45 @@ function calculateHaversineKm(lat1: number, lon1: number, lat2: number, lon2: nu
   return R * c;
 }
 
+// Authoritative Delivery Calculation Engine
+function calculateDeliveryFee(
+  distanceKm: number,
+  courier: any,
+  orderTimestamp: Date = new Date()
+): number {
+  let fee = courier.baseFare;
+
+  // 1. Distance Calculation (Base Fare covers first 4KM)
+  if (distanceKm > courier.baseDistanceKm) {
+    const excessKm = distanceKm - courier.baseDistanceKm;
+    fee += excessKm * courier.perKmCharge;
+  }
+
+  // 2. Optional Platform Fee
+  if (courier.platformFeeEnabled) {
+    fee += courier.platformFee;
+  }
+
+  // 3. Optional Night Differential (10:00 PM - 4:59 AM Manila)
+  if (courier.nightDifferentialEnabled) {
+    // Convert to Manila Time
+    const manilaTime = new Date(orderTimestamp.toLocaleString("en-US", { timeZone: "Asia/Manila" }));
+    const hours = manilaTime.getHours();
+    
+    // 22:00 (10PM) to 04:59 (4:59AM)
+    if (hours >= 22 || hours < 5) {
+      fee += courier.nightDifferentialFee;
+    }
+  }
+
+  // 4. Optional Surcharge
+  if (courier.surchargeEnabled) {
+    fee += courier.surchargeFee;
+  }
+
+  return Math.round(fee * 100) / 100;
+}
+
 // ----------------------------------------------------
 // 1. GEO CONFIG ENDPOINT
 // ----------------------------------------------------
