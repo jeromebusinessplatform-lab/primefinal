@@ -1,5 +1,5 @@
 import { useLocation, useParams, Link } from "react-router-dom";
-import { CheckCircle, Clock, Truck, Hash } from "lucide-react";
+import { CheckCircle, Clock, Truck, Hash, MapPin, Route } from "lucide-react";
 
 export default function OrderConfirmationPage() {
   const { orderId } = useParams<{ orderId: string }>();
@@ -9,6 +9,7 @@ export default function OrderConfirmationPage() {
     queuePosition?: number;
     estimatedWaitingMinutes?: number;
     estimatedDispatchTime?: string;
+    distanceKm?: number;
   } | null;
 
   return (
@@ -99,26 +100,37 @@ export default function OrderConfirmationPage() {
           </div>
         </div>
 
-        <div className="px-4 py-3.5 flex items-center gap-3">
-          <Truck size={20} className="text-blue-500" />
-          <div>
-            <div
-              className="text-xs text-neutral-500 uppercase tracking-wide font-normal"
-              style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
-            >
-              Estimated Dispatch
-            </div>
-            <div
-              className="font-normal"
-              style={{
-                fontFamily: "'Roboto Condensed', sans-serif",
-                fontSize: "18px",
-                color: "#ef4444",
-              }}
-            >
-              {state?.estimatedDispatchTime ?? "21 MINUTES"}
+        <div className="px-4 py-3.5 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Truck size={20} className="text-blue-500" />
+            <div>
+              <div
+                className="text-xs text-neutral-500 uppercase tracking-wide font-normal"
+                style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
+              >
+                Estimated Dispatch
+              </div>
+              <div
+                className="font-normal"
+                style={{
+                  fontFamily: "'Roboto Condensed', sans-serif",
+                  fontSize: "18px",
+                  color: "#ef4444",
+                }}
+              >
+                {state?.estimatedDispatchTime ?? "21 MINUTES"}
+              </div>
             </div>
           </div>
+
+          {state?.distanceKm && (
+            <div className="bg-neutral-100 border border-neutral-200 px-2.5 py-1 rounded-lg text-right font-mono">
+              <div className="text-[10px] text-neutral-400 uppercase">Route Distance</div>
+              <div className="text-xs font-semibold text-neutral-900 flex items-center gap-1">
+                <Route size={12} className="text-neutral-600" /> {state.distanceKm} km
+              </div>
+            </div>
+          )}
         </div>
       </div>
 

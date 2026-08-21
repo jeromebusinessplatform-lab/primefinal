@@ -6,6 +6,7 @@ import { useProducts } from "@/hooks/useProducts.ts";
 import { type Product } from "@/data/products.ts";
 import { toast } from "sonner";
 import { formatCurrency } from "@/lib/utils.ts";
+import { ProductGridSkeleton } from "@/components/ProductCardSkeleton.tsx";
 
 function BadgePill({ badge }: { badge: "NEW" | "SALE" | "LOW_STOCK" }) {
   const config = {
@@ -393,14 +394,7 @@ export default function ShopCatalog() {
       {/* Product Grid */}
       <div className="p-2.5">
         {loading ? (
-          <div className="grid grid-cols-3 gap-2 sm:gap-2.5">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <div
-                key={i}
-                className="bg-white rounded-2xl border border-neutral-200 aspect-[3/5] animate-pulse"
-              />
-            ))}
-          </div>
+          <ProductGridSkeleton count={6} />
         ) : filtered.length === 0 ? (
           <div className="text-center py-16 text-neutral-400 bg-white rounded-2xl border border-neutral-200 p-8 my-4">
             <ShoppingCart size={40} className="mx-auto mb-2 opacity-30" />

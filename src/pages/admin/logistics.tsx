@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import { useCouriers } from "@/hooks/useCouriers.ts";
-import { Truck, Plus, Trash2, X, Check } from "lucide-react";
+import { Truck, Plus, Trash2, X, Check, MapPin } from "lucide-react";
 import { toast } from "sonner";
 import { formatCurrency } from "@/lib/utils.ts";
+import { GeoapifyDiagnostics } from "@/components/admin/GeoapifyDiagnostics.tsx";
 
 export default function LogisticsPage() {
   const { couriers, addCourier, updateCourier, removeCourier } = useCouriers();
@@ -241,6 +242,9 @@ export default function LogisticsPage() {
           ))
         )}
       </div>
+
+      {/* Geoapify Geocoding, Routing & Map Tile Diagnostics */}
+      <GeoapifyDiagnostics />
     </div>
   );
 }
