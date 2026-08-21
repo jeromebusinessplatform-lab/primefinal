@@ -19,6 +19,7 @@ import NotificationsPage from "./pages/shop/notifications.tsx";
 
 import AdminLogin from "./pages/admin/login.tsx";
 import AdminLayout from "./pages/admin/layout.tsx";
+import AdminDashboard from "./pages/admin/dashboard.tsx";
 import AdminOrdersPage from "./pages/admin/orders.tsx";
 import AdminCustomersPage from "./pages/admin/customers.tsx";
 import AdminProductsPage from "./pages/admin/products.tsx";
@@ -69,6 +70,7 @@ export default function App() {
                       </AdminGuard>
                     }
                   >
+                    <Route index element={<AdminDashboard />} />
                     <Route path="orders" element={<AdminOrdersPage />} />
                     <Route path="analytics" element={<AdminAnalyticsPage />} />
                     <Route path="customers" element={<AdminCustomersPage />} />
@@ -76,7 +78,7 @@ export default function App() {
                     <Route path="products" element={<AdminProductsPage />} />
                     <Route path="courier" element={<AdminCourierPage />} />
                     <Route path="settings" element={<AdminSettingsPage />} />
-                    <Route path="*" element={<Navigate to="/admin/orders" replace />} />
+                    <Route path="*" element={<Navigate to="/admin" replace />} />
                   </Route>
 
                   <Route path="*" element={<NotFound />} />

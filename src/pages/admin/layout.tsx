@@ -1,6 +1,6 @@
 import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import { useAdmin } from "@/context/AdminContext.tsx";
-import { ShoppingBag, Package, Settings, LogOut, Truck, ArrowLeft, ScanLine, TrendingUp } from "lucide-react";
+import { ShoppingBag, Package, Settings, LogOut, Truck, ArrowLeft, ScanLine, TrendingUp, LayoutDashboard, Users } from "lucide-react";
 import PrimeLogo from "@/components/PrimeLogo.tsx";
 
 export default function AdminLayout() {
@@ -13,12 +13,13 @@ export default function AdminLayout() {
   };
 
   const navItems = [
+    { to: "/admin", icon: LayoutDashboard, label: "Dashboard", end: true },
     { to: "/admin/orders", icon: ShoppingBag, label: "Orders" },
     { to: "/admin/analytics", icon: TrendingUp, label: "Analytics" },
+    { to: "/admin/customers", icon: Users, label: "Customers" },
     { to: "/admin/ocr", icon: ScanLine, label: "Receipt OCR" },
-    { to: "/admin/logistics", icon: Truck, label: "Logistics" },
-    { to: "/admin/products", icon: Package, label: "Products" },
-    { to: "/admin/courier", icon: Truck, label: "Courier" },
+    { to: "/admin/products", icon: Package, label: "Inventory" },
+    { to: "/admin/courier", icon: Truck, label: "Logistics" },
     { to: "/admin/settings", icon: Settings, label: "Settings" },
   ];
 
@@ -28,20 +29,23 @@ export default function AdminLayout() {
         <div className="flex items-center gap-3">
           <button
             onClick={() => navigate("/shop")}
-            className="flex items-center gap-1 text-xs text-neutral-600 hover:text-black border border-neutral-200 px-2 py-1 rounded-lg"
+            className="flex items-center gap-1 text-xs text-neutral-600 hover:text-black border border-neutral-200 px-2 py-1 rounded-lg transition-colors cursor-pointer"
             style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
           >
             <ArrowLeft size={13} /> Shop View
           </button>
-          <div className="bg-white rounded-md px-2 py-1 flex items-center">
+          <div 
+            className="bg-white rounded-md px-2 py-1 flex items-center cursor-pointer hover:opacity-80 transition-opacity"
+            onClick={() => navigate("/admin")}
+          >
             <PrimeLogo className="h-5" />
           </div>
-          <span className="text-neutral-500 text-xs font-normal">Admin Panel</span>
+          <span className="text-neutral-500 text-xs font-normal hidden sm:inline">Admin Panel</span>
         </div>
 
         <button
           onClick={handleLogout}
-          className="flex items-center gap-1.5 text-neutral-500 hover:text-black text-xs cursor-pointer font-normal"
+          className="flex items-center gap-1.5 text-neutral-500 hover:text-red-600 text-xs cursor-pointer font-normal transition-colors"
           style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
         >
           <LogOut size={14} /> Logout
@@ -51,10 +55,11 @@ export default function AdminLayout() {
       <div className="flex h-[calc(100vh-53px)]">
         <aside className="hidden md:flex flex-col w-48 bg-white border-r border-neutral-200 p-3">
           <nav className="space-y-1">
-            {navItems.map(({ to, icon: Icon, label }) => (
+            {navItems.map(({ to, icon: Icon, label, end }) => (
               <NavLink
                 key={to}
                 to={to}
+                end={end}
                 className={({ isActive }) =>
                   `flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-normal cursor-pointer transition-colors ${
                     isActive
@@ -76,14 +81,15 @@ export default function AdminLayout() {
         </main>
       </div>
 
-      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-neutral-200 flex md:hidden z-40">
-        {navItems.map(({ to, icon: Icon, label }) => (
+      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-neutral-200 flex md:hidden z-40 overflow-x-auto">
+        {navItems.map(({ to, icon: Icon, label, end }) => (
           <NavLink
             key={to}
             to={to}
+            end={end}
             className={({ isActive }) =>
-              `flex-1 flex flex-col items-center py-2 text-xs cursor-pointer ${
-                isActive ? "text-black font-semibold" : "text-neutral-400"
+              `flex-1 min-w-[64px] flex flex-col items-center py-2 text-[10px] cursor-pointer transition-colors ${
+                isActive ? "text-black font-bold" : "text-neutral-400"
               }`
             }
             style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
