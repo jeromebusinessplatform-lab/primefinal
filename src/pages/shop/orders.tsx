@@ -1,12 +1,22 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTelegram } from "@/context/TelegramContext.tsx";
 import { useOrders, type CustomerOrder } from "@/hooks/useOrders.ts";
 import { useReviews } from "@/hooks/useReviews.ts";
-import { Package, Clock, Truck, Star, MessageSquare, CheckCircle2, ChevronRight } from "lucide-react";
+import { Package, Clock, Truck, Star, MessageSquare, CheckCircle2, ChevronRight, MapPin } from "lucide-react";
 import { Link } from "react-router-dom";
 import { formatCurrency } from "@/lib/utils.ts";
 import { StarRating } from "@/components/StarRating.tsx";
 import { ProductReviewModal } from "@/components/ProductReviewModal.tsx";
+
+// Mock tracking component
+const OrderTracker = ({ orderId, lat, lon }: { orderId: string, lat: number, lon: number }) => {
+  const [tracking, setTracking] = useState<any>(null);
+  useEffect(() => {
+    fetch(`/api/courier-location?lat=${lat}&lon=${lon}`).then(res => res.json()).then(setTracking);
+  }, [lat, lon]);
+  if (!tracking) return <div className="text-xs text-neutral-500">Tracking...</div>;
+  return <div className="text-xs font-mono text-blue-600 bg-blue-50 p-2 rounded">Courier: {tracking.features?.[0]?.properties?.distance ? (tracking.features[0].properties.distance/1000).toFixed(1) : "?"} km away</div>;
+}
 
 const STATUS_LABELS: Record<string, string> = {
   REVIEW: "Under Review",
@@ -260,17 +270,22 @@ export default function OrdersPage() {
               </div>
 
               {!["DELIVERED", "CANCELLED", "REJECTED"].includes(order.orderStatus) && (
-                <div className="mt-2 pt-2 border-t border-neutral-100 flex items-center justify-between text-xs text-neutral-600 bg-neutral-50/80 -mx-3.5 -mb-3.5 p-2.5 rounded-b-2xl font-normal" style={{ fontFamily: "'Ubuntu', sans-serif" }}>
-                  <div className="flex items-center gap-1.5 font-normal">
-                    <Clock size={13} className="text-orange-500" />
-                    <span>
-                      Queue #{order.queuePosition} • {order.estimatedWaitingMinutes} min wait
-                    </span>
+                <div className="mt-2 pt-2 border-t border-neutral-100 space-y-2">
+                  <div className="flex items-center justify-between text-xs text-neutral-600 bg-neutral-50/80 -mx-3.5 p-2.5 font-normal" style={{ fontFamily: "'Ubuntu', sans-serif" }}>
+                    <div className="flex items-center gap-1.5 font-normal">
+                      <Clock size={13} className="text-orange-500" />
+                      <span>
+                        Queue #{order.queuePosition} • {order.estimatedWaitingMinutes} min wait
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1.5 font-normal">
+                      <Truck size={13} className="text-blue-500" />
+                      <span>{order.estimatedDispatchTime}</span>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-1.5 font-normal">
-                    <Truck size={13} className="text-blue-500" />
-                    <span>{order.estimatedDispatchTime}</span>
-                  </div>
+                  {["DISPATCHED", "AWAITING_RIDER"].includes(order.orderStatus) && (
+                    <OrderTracker orderId={order._id} lat={14.5516} lon={121.0503} />
+                  )}
                 </div>
               )}
             </div>

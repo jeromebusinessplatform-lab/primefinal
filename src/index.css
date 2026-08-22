@@ -4,10 +4,12 @@
 @layer base {
   html, body, #root {
     height: 100dvh;
+    height: calc(100dvh + env(safe-area-inset-bottom));
     width: 100dvw;
     margin: 0;
     padding: 0;
     overflow: hidden;
+    padding-bottom: env(safe-area-inset-bottom);
   }
   * {
     box-sizing: border-box;

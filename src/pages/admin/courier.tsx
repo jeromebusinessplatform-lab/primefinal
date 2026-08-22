@@ -3,9 +3,10 @@ import { useCouriers } from '@/hooks/useCouriers';
 import { storage } from '@/lib/firebase';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import Cropper, { Area } from 'react-easy-crop';
+import { CourierListSkeleton } from '@/components/admin/CourierListSkeleton.tsx';
 
 export default function CourierPage() {
-  const { couriers, updateCourier, addCourier, removeCourier } = useCouriers();
+  const { couriers, loading, updateCourier, addCourier, removeCourier } = useCouriers();
   const [formData, setFormData] = useState({
     name: '',
     baseFare: 0,
@@ -122,20 +123,24 @@ export default function CourierPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {couriers.map(c => (
-          <div key={c.id} className="bg-white p-4 rounded-xl shadow flex items-center justify-between">
-            <div className='flex items-center gap-3'>
-                <img src={c.logoUrl} alt={c.name} className='w-12 h-12 object-contain'/>
-                <div>
-                    <div className='font-bold'>{c.name}</div>
-                    <button onClick={() => updateCourier(c.id, { isAvailable: !c.isAvailable })} className={`text-xs px-2 py-1 rounded ${c.isAvailable ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                        {c.isAvailable ? 'Available' : 'Unavailable'}
-                    </button>
-                </div>
+        {loading ? (
+          <CourierListSkeleton count={4} />
+        ) : (
+          couriers.map(c => (
+            <div key={c.id} className="bg-white p-4 rounded-xl shadow flex items-center justify-between">
+              <div className='flex items-center gap-3'>
+                  <img src={c.logoUrl} alt={c.name} className='w-12 h-12 object-contain'/>
+                  <div>
+                      <div className='font-bold'>{c.name}</div>
+                      <button onClick={() => updateCourier(c.id, { isAvailable: !c.isAvailable })} className={`text-xs px-2 py-1 rounded ${c.isAvailable ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                          {c.isAvailable ? 'Available' : 'Unavailable'}
+                      </button>
+                  </div>
+              </div>
+              <button onClick={() => removeCourier(c.id)} className="text-red-500">Remove</button>
             </div>
-            <button onClick={() => removeCourier(c.id)} className="text-red-500">Remove</button>
-          </div>
-        ))}
+          ))
+        )}
       </div>
     </div>
   );

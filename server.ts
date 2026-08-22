@@ -355,6 +355,25 @@ app.get("/api/geo/static-map", (req, res) => {
   return res.redirect(`https://static-maps.yandex.ru/1.x/?ll=${lon},${lat}&z=${zoom}&l=map&size=${Math.min(width, 600)},${Math.min(height, 280)}&pt=${lon},${lat},pm2rdm`);
 });
 
+app.get("/api/courier-location", async (req, res) => {
+  try {
+    const lat = req.query.lat as string;
+    const lon = req.query.lon as string;
+    if (!lat || !lon) return res.status(400).json({ error: "Missing coordinates" });
+    const apiKey = process.env.GEOAPIFY_API_KEY;
+    if (!apiKey) return res.status(500).json({ error: "API key missing" });
+    
+    // Simulate courier moving slightly
+    const response = await fetch(`https://api.geoapify.com/v1/routing?waypoints=${lat},${lon}|14.5516,121.0503&mode=drive&apiKey=${apiKey}`);
+    if (!response.ok) throw new Error("Geoapify request failed");
+    const data = await response.json();
+    return res.json(data);
+  } catch (error: any) {
+    console.error("Courier tracking error:", error);
+    return res.status(500).json({ error: "Unable to fetch tracking info" });
+  }
+});
+
 function analyzeReceiptHeuristic(rawImageString: string, expectedAmount?: number, expectedReceiver?: string) {
   const decoded = decodeURIComponent(rawImageString); const now = new Date(); let channel = "GCash"; let channelType: any = "E_WALLET"; let referenceNumber = "1002" + Math.floor(100000000 + Math.random() * 900000000).toString(); let amount = expectedAmount || 1450.0; let currency = "PHP"; let senderName = "Customer Account"; let receiverName = expectedReceiver || "PRIME ENTERPRISE PH"; let status: any = "SUCCESS"; let confidenceScore = 94;
   if (/maya/i.test(decoded)) { channel = "Maya"; referenceNumber = "MYA-" + Math.floor(1000 + Math.random() * 9000) + "-" + Math.floor(1000 + Math.random() * 9000); confidenceScore = 96; } else if (/bpi/i.test(decoded)) { channel = "BPI"; channelType = "BANK_TRANSFER"; referenceNumber = "BPI-FT-" + now.toISOString().slice(0, 10).replace(/-/g, "") + "-" + Math.floor(1000 + Math.random() * 9000); confidenceScore = 95; } else if (/bdo/i.test(decoded)) { channel = "BDO"; channelType = "BANK_TRANSFER"; referenceNumber = "BDO-REF-" + Math.floor(1000000000 + Math.random() * 9000000000); confidenceScore = 93; } else if (/pos|official receipt|invoice/i.test(decoded)) { channel = "Store POS Invoice"; channelType = "PHYSICAL_RECEIPT"; referenceNumber = "OR# " + now.getFullYear() + "-" + Math.floor(10000 + Math.random() * 90000); confidenceScore = 92; }

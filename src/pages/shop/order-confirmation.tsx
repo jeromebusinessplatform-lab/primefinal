@@ -1,5 +1,7 @@
 import { useLocation, useParams, Link } from "react-router-dom";
 import { CheckCircle, Clock, Truck, Hash, MapPin, Route } from "lucide-react";
+import { useEffect } from "react";
+import confetti from "canvas-confetti";
 
 export default function OrderConfirmationPage() {
   const { orderId } = useParams<{ orderId: string }>();
@@ -11,6 +13,14 @@ export default function OrderConfirmationPage() {
     estimatedDispatchTime?: string;
     distanceKm?: number;
   } | null;
+
+  useEffect(() => {
+    confetti({
+      particleCount: 150,
+      spread: 70,
+      origin: { y: 0.6 }
+    });
+  }, []);
 
   return (
     <div className="bg-[#f3f4f6] min-h-full p-4">

@@ -42,7 +42,7 @@ export default function App() {
     <TelegramProvider><CartProvider><AdminProvider>
       <Toaster /><OrientationLock /><InstallPrompt />
       <div className="w-full min-h-[100dvh] flex flex-col items-center justify-start bg-neutral-950 overflow-x-hidden">
-        <div className="w-full max-w-[412px] min-h-[100dvh] bg-[#f3f4f6] relative flex flex-col shadow-2xl overflow-x-hidden border-x border-neutral-800/20">
+        <div className="w-full max-w-[412px] min-h-[100dvh] bg-[#f3f4f6] relative flex flex-col shadow-2xl overflow-x-hidden border-x border-neutral-800/20 pb-16">
           <BrowserRouter><Routes>
             <Route path="/" element={<Navigate to="/shop" replace />} />
             <Route path="/shop" element={<ShopLayout />}>

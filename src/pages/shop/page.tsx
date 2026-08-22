@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { formatCurrency } from "@/lib/utils.ts";
 import { ProductGridSkeleton } from "@/components/ProductCardSkeleton.tsx";
 import { StarRating } from "@/components/StarRating.tsx";
+import { motion } from "motion/react";
 
 function BadgePill({ badge }: { badge: "NEW" | "SALE" | "LOW_STOCK" }) {
   const config = {
@@ -120,7 +121,7 @@ function ProductCard({ product, allProducts }: { product: Product; allProducts?:
           <div className="absolute top-2 right-2 z-10">
             <span
               onClick={() => setShowBundleDrawer(true)}
-              className="bg-amber-100/95 text-amber-900 border border-amber-300 text-[9px] font-bold px-2 py-0.5 rounded-full uppercase leading-none shadow-xs flex items-center gap-0.5 cursor-pointer hover:bg-amber-200 transition-colors"
+              className="bg-amber-100/95 text-amber-900 border border-amber-300 text-[9px] font-bold px-2 py-0.5 rounded-full uppercase leading-none shadow-xs flex items-center gap-0.5 cursor-pointer hover:bg-amber-200 transition-colors active:scale-95 duration-100"
               style={{ fontFamily: "'Roboto Condensed', sans-serif" }}
             >
               <Sparkles size={9} className="text-amber-600" /> Suggested Bundle
@@ -170,7 +171,7 @@ function ProductCard({ product, allProducts }: { product: Product; allProducts?:
             <button
               type="button"
               onClick={() => setShowBundleDrawer(true)}
-              className="mt-1 w-full text-left bg-amber-50/90 border border-amber-200/90 rounded-lg p-1.5 flex items-center justify-between text-[10px] text-amber-900 font-normal hover:bg-amber-100 transition-colors cursor-pointer"
+              className="mt-1 w-full text-left bg-amber-50/90 border border-amber-200/90 rounded-lg p-1.5 flex items-center justify-between text-[10px] text-amber-900 font-normal hover:bg-amber-100 transition-colors cursor-pointer active:scale-95 duration-100"
             >
               <span className="flex items-center gap-1 font-medium truncate">
                 <Layers size={10} className="text-amber-600 shrink-0" />
@@ -182,7 +183,7 @@ function ProductCard({ product, allProducts }: { product: Product; allProducts?:
 
           {/* Aggregate Star Rating & Reviews Badge */}
           <div
-            className="mt-1 flex items-center gap-1 cursor-pointer group"
+            className="mt-1 flex items-center gap-1 cursor-pointer group active:scale-95 transition-transform duration-100"
             onClick={() => setShowReviewsDrawer(true)}
             title="Click to view verified customer reviews"
           >
@@ -229,7 +230,7 @@ function ProductCard({ product, allProducts }: { product: Product; allProducts?:
                 setShowQuantity(true);
               }}
               disabled={isOutOfStock}
-              className="w-full h-7 rounded-full bg-neutral-800 hover:bg-black text-white text-[12px] uppercase tracking-wider font-normal active:scale-95 transition-all cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+              className="w-full h-7 rounded-full bg-neutral-800 hover:bg-black text-white text-[12px] uppercase tracking-wider font-normal active:scale-95 transition-all duration-100 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
             >
               Add to Cart
             </button>
@@ -238,7 +239,7 @@ function ProductCard({ product, allProducts }: { product: Product; allProducts?:
               <button
                 onClick={handleDecrement}
                 disabled={isOutOfStock}
-                className="h-full px-2 text-neutral-600 hover:bg-neutral-100 active:bg-neutral-200 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                className="h-full px-2 text-neutral-600 hover:bg-neutral-100 active:bg-neutral-200 active:scale-95 transition-transform duration-100 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                 aria-label="Decrease quantity"
               >
                 <Minus size={12} className="stroke-[2.2]" />
@@ -255,7 +256,7 @@ function ProductCard({ product, allProducts }: { product: Product; allProducts?:
               <button
                 onClick={handleIncrement}
                 disabled={isOutOfStock || localQty >= product.stock}
-                className="h-full px-2 text-neutral-600 hover:bg-neutral-100 active:bg-neutral-200 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                className="h-full px-2 text-neutral-600 hover:bg-neutral-100 active:bg-neutral-200 active:scale-95 transition-transform duration-100 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                 aria-label="Increase quantity"
               >
                 <Plus size={12} className="stroke-[2.2]" />
@@ -584,7 +585,7 @@ export default function ShopCatalog() {
                 setShowFilterMenu((v) => !v);
                 setShowCategoryMenu(false);
               }}
-              className="flex items-center justify-between gap-1.5 bg-white border border-neutral-200/90 rounded-xl px-2.5 py-1.5 text-xs font-normal text-neutral-800 cursor-pointer shadow-2xs hover:bg-neutral-50 min-w-[95px]"
+              className="flex items-center justify-between gap-1.5 bg-white border border-neutral-200/90 rounded-xl px-2.5 py-1.5 text-xs font-normal text-neutral-800 cursor-pointer shadow-2xs hover:bg-neutral-50 min-w-[95px] active:scale-95 transition-transform duration-100"
               style={{ fontFamily: "'Ubuntu', sans-serif" }}
             >
               <span className="truncate max-w-[75px]">
@@ -645,7 +646,7 @@ export default function ShopCatalog() {
                   setActiveCategory("All Categories");
                   setActiveFilter("all");
                 }}
-                className="mt-3 text-xs bg-black text-white font-normal px-4 py-2 rounded-xl cursor-pointer hover:bg-neutral-800"
+                className="mt-3 text-xs bg-black text-white font-normal px-4 py-2 rounded-xl cursor-pointer hover:bg-neutral-800 active:scale-95 transition-transform duration-100"
                 style={{ fontFamily: "'Ubuntu', sans-serif" }}
               >
                 Reset all filters
@@ -653,11 +654,26 @@ export default function ShopCatalog() {
             )}
           </div>
         ) : (
-          <div className="grid grid-cols-3 gap-2 sm:gap-2.5">
+          <motion.div
+            className="grid grid-cols-3 gap-2 sm:gap-2.5"
+            initial="hidden"
+            animate="visible"
+            variants={{
+              visible: { transition: { staggerChildren: 0.05 } }
+            }}
+          >
             {filtered.map((product) => (
-              <ProductCard key={product._id} product={product} allProducts={products} />
+              <motion.div
+                key={product._id}
+                variants={{
+                  hidden: { opacity: 0, y: 10 },
+                  visible: { opacity: 1, y: 0 }
+                }}
+              >
+                <ProductCard product={product} allProducts={products} />
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         )}
       </div>
     </div>
