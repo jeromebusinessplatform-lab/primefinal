@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Outlet, NavLink, useNavigate } from "react-router-dom";
+import { Outlet, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useAdmin } from "@/context/AdminContext.tsx";
 import { ShoppingBag, Package, LogOut, Truck, ArrowLeft, Users, ReceiptText, BadgePercent, BarChart3, WalletCards, Headphones, Settings, Stethoscope } from "lucide-react";
 import PrimeLogo from "@/components/PrimeLogo.tsx";
@@ -63,7 +63,9 @@ function Metric({ label, value, className }: { label: string; value: string | nu
 
 export default function AdminLayout() {
   const { logout } = useAdmin();
+  const location = useLocation();
   const navigate = useNavigate();
+  const isDashboard = location.pathname === "/admin";
   const handleLogout = () => { logout(); navigate("/admin/login", { replace: true }); };
 
   return (
@@ -84,25 +86,27 @@ export default function AdminLayout() {
           </div>
         </aside>
 
-        <main className="flex-1 overflow-auto pb-28">
+        <main className={`flex-1 overflow-auto ${isDashboard ? "pb-20" : "pb-28"}`}>
           <Outlet />
         </main>
       </div>
 
-      <nav className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-neutral-300 shadow-[0_-2px_8px_rgba(0,0,0,0.08)] px-2 py-2">
-        <div className="max-w-5xl mx-auto flex items-center gap-2">
-          <button type="button" onClick={() => navigate("/shop")} className="hidden sm:flex items-center justify-center gap-1 px-3 py-2 text-[11px] text-neutral-600 border border-neutral-200 rounded-md hover:text-black cursor-pointer"><ArrowLeft size={13} />SHOP</button>
-          <div className="flex-1 grid grid-cols-4 sm:grid-cols-6 gap-1">
-            {navItems.slice(0, 6).map(({ to, icon: Icon, label, end }) => (
-              <NavLink key={to} to={to} end={end} className={({ isActive }) => `flex flex-col items-center justify-center py-1.5 rounded-md text-[9px] ${isActive ? "bg-black text-white" : "text-neutral-500 hover:text-black"}`}>
-                <Icon size={16} /><span className="mt-0.5">{label}</span>
-              </NavLink>
-            ))}
+      {!isDashboard && (
+        <nav className="fixed bottom-[42px] left-0 right-0 z-40 bg-white border-t border-neutral-300 shadow-[0_-2px_8px_rgba(0,0,0,0.08)] px-2 py-2">
+          <div className="max-w-5xl mx-auto flex items-center gap-2">
+            <button type="button" onClick={() => navigate("/shop")} className="hidden sm:flex items-center justify-center gap-1 px-3 py-2 text-[11px] text-neutral-600 border border-neutral-200 rounded-md hover:text-black cursor-pointer"><ArrowLeft size={13} />SHOP</button>
+            <div className="flex-1 grid grid-cols-4 sm:grid-cols-6 gap-1">
+              {navItems.slice(0, 6).map(({ to, icon: Icon, label, end }) => (
+                <NavLink key={to} to={to} end={end} className={({ isActive }) => `flex flex-col items-center justify-center py-1.5 rounded-md text-[9px] ${isActive ? "bg-black text-white" : "text-neutral-500 hover:text-black"}`}>
+                  <Icon size={16} /><span className="mt-0.5">{label}</span>
+                </NavLink>
+              ))}
+            </div>
+            <button type="button" onClick={() => navigate("/admin/settings")} className="p-2 text-neutral-500 hover:text-black cursor-pointer" aria-label="System settings"><Settings size={18} /></button>
+            <button type="button" onClick={handleLogout} className="p-2 text-neutral-500 hover:text-red-600 cursor-pointer" aria-label="Logout"><LogOut size={18} /></button>
           </div>
-          <button type="button" onClick={() => navigate("/admin/settings")} className="p-2 text-neutral-500 hover:text-black cursor-pointer" aria-label="System settings"><Settings size={18} /></button>
-          <button type="button" onClick={handleLogout} className="p-2 text-neutral-500 hover:text-red-600 cursor-pointer" aria-label="Logout"><LogOut size={18} /></button>
-        </div>
-      </nav>
+        </nav>
+      )}
     </div>
   );
 }
