@@ -9,6 +9,7 @@ import {
   deleteDoc,
   doc,
   Timestamp,
+  getDocs,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase.ts";
 import type { ReceiptOcrResult } from "@/types/ocr.ts";
@@ -31,7 +32,7 @@ export interface OrderItem {
 export interface CustomerOrder {
   _id: string; orderNumber: string; _creationTime: number;
   telegramUserId?: string; telegramDisplayName?: string; telegramUsername?: string;
-  items: OrderItem[]; total: number; subtotal: number; discount: number; deliveryFee: number;
+  items: OrderItem[]; total: number; subtotal: number; discount: number; deliveryFee: number; charges?: number;
   receiverName: string; contactNumber: string; deliveryAddress: string; courierName: string;
   deliveryProviderId?: string; deliveryCharge?: number; deliveryPaymentMethod?: DeliveryPaymentOption;
   paymentMethodName: string; paymentStatus: PaymentStatus; orderStatus: OrderStatus;
@@ -44,6 +45,7 @@ type FirestoreOrder = Omit<CustomerOrder, "_id" | "_creationTime"> & { createdAt
 const ORDERS_COLLECTION = "orders";
 const CUSTOMERS_COLLECTION = "customers";
 const PRODUCTS_COLLECTION = "products";
+const CHARGES_COLLECTION = "charges";
 
 function makeOrderNumber(): string {
   const now = new Date();
@@ -85,6 +87,13 @@ export function useOrders(telegramUserId?: string) {
     const customerRef = doc(db, CUSTOMERS_COLLECTION, verifiedTelegramUserId);
     const productRefs = orderData.items.map((item) => ({ item, ref: doc(db, PRODUCTS_COLLECTION, item.productId) }));
 
+    // Load the currently active admin-configured charges once before the transaction.
+    // The transaction still remains authoritative for product prices, stock and the final order write.
+    const chargesSnapshot = await getDocs(collection(db, CHARGES_COLLECTION));
+    const activeCharges = chargesSnapshot.docs
+      .map((entry) => entry.data() as { amount?: number; type?: "fixed" | "percent"; active?: boolean })
+      .filter((charge) => charge.active === true);
+
     await runTransaction(db, async (transaction) => {
       const productSnapshots = [];
       for (const entry of productRefs) {
@@ -114,8 +123,14 @@ export function useOrders(telegramUserId?: string) {
       const clientDiscount = Number(orderData.discount || 0);
       const safeDiscount = Number.isFinite(clientDiscount) ? Math.max(0, Math.min(clientDiscount, authoritativeSubtotal)) : 0;
       const deliveryFee = Math.max(0, Number(orderData.deliveryFee || 0));
-      const tax = Math.round((authoritativeSubtotal - safeDiscount) * 0.05 * 100) / 100;
-      const authoritativeTotal = Math.round((authoritativeSubtotal - safeDiscount + tax + deliveryFee) * 100) / 100;
+      const merchandiseAfterDiscount = Math.max(0, authoritativeSubtotal - safeDiscount);
+      const charges = Math.round(activeCharges.reduce((sum, charge) => {
+        const amount = Number(charge.amount ?? 0);
+        if (!Number.isFinite(amount) || amount < 0) return sum;
+        return sum + (charge.type === "percent" ? merchandiseAfterDiscount * amount / 100 : amount);
+      }, 0) * 100) / 100;
+      const tax = Math.round((merchandiseAfterDiscount + charges) * 0.05 * 100) / 100;
+      const authoritativeTotal = Math.round((merchandiseAfterDiscount + charges + tax + deliveryFee) * 100) / 100;
       const now = Timestamp.now();
 
       transaction.set(orderRef, {
@@ -125,6 +140,7 @@ export function useOrders(telegramUserId?: string) {
         items: normalizedItems,
         subtotal: authoritativeSubtotal,
         discount: safeDiscount,
+        charges,
         deliveryFee,
         total: authoritativeTotal,
         paymentStatus: "PENDING" as PaymentStatus,
