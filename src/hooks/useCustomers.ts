@@ -1,5 +1,6 @@
-import { useMemo } from "react";
-import { useOrders } from "./useOrders";
+import { useEffect, useState } from "react";
+import { collection, onSnapshot, query, orderBy } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
 export interface Customer {
   id: string;
@@ -13,51 +14,52 @@ export interface Customer {
   referrals: number;
   totalSpending: number;
   orderCount: number;
+  lastOrderAt?: number;
+}
+
+type TimestampLike = { toMillis?: () => number } | number | null | undefined;
+
+function timestampMillis(value: TimestampLike): number {
+  if (typeof value === "number") return value;
+  if (value && typeof value.toMillis === "function") return value.toMillis();
+  return Date.now();
 }
 
 export function useCustomers() {
-  const { allOrders, loading } = useOrders();
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const customers = useMemo(() => {
-    const customerMap = new Map<string, Customer>();
-
-    for (const order of allOrders) {
-      if (!order.telegramUserId) continue;
-
-      const customerId = order.telegramUserId;
-      const existing = customerMap.get(customerId);
-
-      if (existing) {
-        existing.orderCount += 1;
-        existing.totalSpending += order.total;
-        existing.points += Math.floor(order.total * 0.1);
-        existing.memberSince = Math.min(existing.memberSince, order._creationTime);
-        if (!existing.telegramUsername && order.telegramUsername) {
-          existing.telegramUsername = order.telegramUsername;
-        }
-        if (existing.telegramDisplayName === "Unknown" && order.telegramDisplayName) {
-          existing.telegramDisplayName = order.telegramDisplayName;
-        }
-        continue;
+  useEffect(() => {
+    const customersQuery = query(collection(db, "customers"), orderBy("updatedAt", "desc"));
+    return onSnapshot(
+      customersQuery,
+      (snapshot) => {
+        setCustomers(snapshot.docs.map((customerDoc) => {
+          const data = customerDoc.data();
+          return {
+            id: customerDoc.id,
+            telegramUserId: String(data.telegramUserId || customerDoc.id),
+            telegramDisplayName: String(data.telegramDisplayName || "Unknown"),
+            telegramUsername: data.telegramUsername || undefined,
+            primeMemberId: String(data.primeMemberId || `PC${customerDoc.id.slice(0, 8).toUpperCase()}`),
+            vipTier: data.vipTier || "Bronze",
+            points: Number(data.points || 0),
+            memberSince: timestampMillis(data.memberSince),
+            referrals: Number(data.referrals || 0),
+            totalSpending: Number(data.totalSpending || 0),
+            orderCount: Number(data.orderCount || 0),
+            lastOrderAt: data.lastOrderAt ? timestampMillis(data.lastOrderAt) : undefined,
+          } as Customer;
+        }));
+        setLoading(false);
+      },
+      (error) => {
+        console.error("Failed to subscribe to customers:", error);
+        setCustomers([]);
+        setLoading(false);
       }
-
-      customerMap.set(customerId, {
-        id: customerId,
-        telegramUserId: customerId,
-        telegramDisplayName: order.telegramDisplayName || "Unknown",
-        telegramUsername: order.telegramUsername,
-        primeMemberId: `PC${customerId.slice(0, 8).toUpperCase()}`,
-        vipTier: "Bronze",
-        points: Math.floor(order.total * 0.1),
-        memberSince: order._creationTime,
-        referrals: 0,
-        totalSpending: order.total,
-        orderCount: 1,
-      });
-    }
-
-    return Array.from(customerMap.values());
-  }, [allOrders]);
+    );
+  }, []);
 
   return { customers, loading };
 }
