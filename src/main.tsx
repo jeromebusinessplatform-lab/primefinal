@@ -4,6 +4,12 @@ import App from './App.tsx';
 import './index.css';
 import 'leaflet/dist/leaflet.css';
 
+// Initialize Telegram WebApp if available
+if (window.Telegram?.WebApp) {
+  window.Telegram.WebApp.ready();
+  window.Telegram.WebApp.expand();
+}
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <App />
