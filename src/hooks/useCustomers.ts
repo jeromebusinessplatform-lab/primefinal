@@ -1,59 +1,7 @@
-import { useState, useMemo } from 'react';
-import { useOrders } from './useOrders';
-import { TelegramCustomer } from '../context/TelegramContext';
-
-export interface Customer {
-  id: string; // telegramUserId
-  telegramUserId: string;
-  telegramDisplayName: string;
-  telegramUsername?: string;
-  primeMemberId: string;
-  vipTier: 'Bronze' | 'Silver' | 'Gold';
-  points: number;
-  memberSince: number; // timestamp
-  referrals: number;
-  totalSpending: number;
-  orderCount: number;
-}
-
+import { useCallback, useEffect, useState } from "react";
+export interface Customer { id: string; telegramUserId: string; telegramDisplayName: string; telegramUsername?: string; primeMemberId: string; vipTier: "Bronze" | "Silver" | "Gold"; points: number; memberSince: number; referrals: number; totalSpending: number; orderCount: number; lastOrderAt?: number; }
 export function useCustomers() {
-  const { allOrders } = useOrders();
-
-  // Aggregate customer data from orders
-  const customers = useMemo(() => {
-    const customerMap = new Map<string, Customer>();
-
-    allOrders.forEach(order => {
-      if (!order.telegramUserId) return;
-
-      const customerId = order.telegramUserId;
-      let customer = customerMap.get(customerId);
-
-      if (!customer) {
-        customer = {
-          id: customerId,
-          telegramUserId: customerId,
-          telegramDisplayName: order.telegramDisplayName || 'Unknown',
-          telegramUsername: order.telegramUsername,
-          primeMemberId: `PC${customerId.slice(0, 8).toUpperCase()}`, // Stable ID
-          vipTier: 'Bronze',
-          points: Math.floor(order.total * 0.1), // Mock point logic
-          memberSince: order._creationTime,
-          referrals: 0, // Need to implement referral system or aggregate from orders
-          totalSpending: 0,
-          orderCount: 0,
-        };
-        customerMap.set(customerId, customer);
-      }
-
-      customer.orderCount += 1;
-      customer.totalSpending += order.total;
-      customer.points += Math.floor(order.total * 0.1); // Mock point logic
-      customer.memberSince = Math.min(customer.memberSince, order._creationTime);
-    });
-
-    return Array.from(customerMap.values());
-  }, [allOrders]);
-
-  return { customers };
+  const [customers, setCustomers] = useState<Customer[]>([]); const [loading, setLoading] = useState(true);
+  const load = useCallback(async () => { setLoading(true); try { const response = await fetch("/api/customers", { credentials: "same-origin" }); const data = await response.json().catch(() => ({})); if (!response.ok) throw new Error(data.error || "Unable to load customers"); setCustomers(Array.isArray(data.customers) ? data.customers.map((d: any) => ({ id: String(d.id), telegramUserId: String(d.telegramUserId || d.id), telegramDisplayName: String(d.telegramDisplayName || "Unknown"), telegramUsername: d.telegramUsername || undefined, primeMemberId: String(d.primeMemberId || `PC${String(d.id).slice(0, 8).toUpperCase()}`), vipTier: d.vipTier || "Bronze", points: Number(d.points || 0), memberSince: Number(d.memberSince || Date.now()), referrals: Number(d.referrals || 0), totalSpending: Number(d.totalSpending || 0), orderCount: Number(d.orderCount || 0), lastOrderAt: d.lastOrderAt ? Number(d.lastOrderAt) : undefined })) : []); } catch (e) { console.error(e); setCustomers([]); } finally { setLoading(false); } }, []);
+  useEffect(() => { void load(); }, [load]); return { customers, loading, refresh: load };
 }
