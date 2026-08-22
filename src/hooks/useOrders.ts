@@ -8,8 +8,11 @@ import {
   updateDoc,
   deleteDoc,
   doc,
+  writeBatch,
   serverTimestamp,
   Timestamp,
+  setDoc,
+  increment,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase.ts";
 import type { ReceiptOcrResult } from "@/types/ocr.ts";
@@ -78,16 +81,13 @@ type FirestoreOrder = Omit<CustomerOrder, "_id" | "_creationTime"> & {
 };
 
 const ORDERS_COLLECTION = "orders";
+const CUSTOMERS_COLLECTION = "customers";
 
 function fromFirestore(id: string, data: FirestoreOrder): CustomerOrder {
   const createdAt = data.createdAt;
   const creationTime = createdAt instanceof Timestamp ? createdAt.toMillis() : Date.now();
 
-  return {
-    ...data,
-    _id: id,
-    _creationTime: creationTime,
-  };
+  return { ...data, _id: id, _creationTime: creationTime };
 }
 
 export function useOrders(telegramUserId?: string) {
@@ -99,18 +99,15 @@ export function useOrders(telegramUserId?: string) {
     setLoading(true);
     setError(null);
 
-    const ordersQuery = query(
-      collection(db, ORDERS_COLLECTION),
-      orderBy("createdAt", "desc")
-    );
-
+    const ordersQuery = query(collection(db, ORDERS_COLLECTION), orderBy("createdAt", "desc"));
     const unsubscribe = onSnapshot(
       ordersQuery,
       (snapshot) => {
-        const nextOrders = snapshot.docs.map((snapshotDoc) =>
-          fromFirestore(snapshotDoc.id, snapshotDoc.data() as FirestoreOrder)
+        setOrders(
+          snapshot.docs.map((snapshotDoc) =>
+            fromFirestore(snapshotDoc.id, snapshotDoc.data() as FirestoreOrder)
+          )
         );
-        setOrders(nextOrders);
         setLoading(false);
       },
       (snapshotError) => {
@@ -125,52 +122,71 @@ export function useOrders(telegramUserId?: string) {
 
   const createOrder = useCallback(
     async (orderData: Omit<CustomerOrder, "_id" | "_creationTime">) => {
+      const batch = writeBatch(db);
+      const orderRef = doc(collection(db, ORDERS_COLLECTION));
       const now = serverTimestamp();
-      const orderDocument: FirestoreOrder = {
+
+      batch.set(orderRef, {
         ...orderData,
-        createdAt: now as unknown as Timestamp,
-        updatedAt: now as unknown as Timestamp,
-      };
-
-      const created = await addDoc(collection(db, ORDERS_COLLECTION), orderDocument);
-
-      return {
-        ...orderData,
-        _id: created.id,
-        _creationTime: Date.now(),
-      } as CustomerOrder;
-    },
-    []
-  );
-
-  const updateOrderStatus = useCallback(
-    async (orderId: string, newStatus: OrderStatus, notes?: string) => {
-      await updateDoc(doc(db, ORDERS_COLLECTION, orderId), {
-        orderStatus: newStatus,
-        ...(notes !== undefined ? { adminNotes: notes } : {}),
-        updatedAt: serverTimestamp(),
+        createdAt: now,
+        updatedAt: now,
       });
+
+      // Keep a persistent customer profile alongside the order. This removes the
+      // previous dependency on browser-local order history for the admin Customers view.
+      if (orderData.telegramUserId) {
+        const customerRef = doc(db, CUSTOMERS_COLLECTION, orderData.telegramUserId);
+        batch.set(
+          customerRef,
+          {
+            id: orderData.telegramUserId,
+            telegramUserId: orderData.telegramUserId,
+            telegramDisplayName: orderData.telegramDisplayName || "Unknown",
+            telegramUsername: orderData.telegramUsername || null,
+            primeMemberId: `PC${orderData.telegramUserId.slice(0, 8).toUpperCase()}`,
+            vipTier: "Bronze",
+            points: increment(Math.floor(orderData.total * 0.1)),
+            totalSpending: increment(orderData.total),
+            orderCount: increment(1),
+            lastOrderAt: now,
+            memberSince: now,
+            updatedAt: now,
+          },
+          { merge: true }
+        );
+      }
+
+      await new Promise<void>((resolve, reject) => {
+        try {
+          batch.commit().then(() => resolve()).catch(reject);
+        } catch (commitError) {
+          reject(commitError);
+        }
+      });
+
+      return { ...orderData, _id: orderRef.id, _creationTime: Date.now() } as CustomerOrder;
     },
     []
   );
 
-  const updateOrderOcr = useCallback(
-    async (orderId: string, ocrData: ReceiptOcrResult, receiptUrl?: string) => {
-      await updateDoc(doc(db, ORDERS_COLLECTION, orderId), {
-        receiptOcrData: ocrData,
-        ...(receiptUrl ? { receiptUrl } : {}),
-        updatedAt: serverTimestamp(),
-      });
-    },
-    []
-  );
+  const updateOrderStatus = useCallback(async (orderId: string, newStatus: OrderStatus, notes?: string) => {
+    await updateDoc(doc(db, ORDERS_COLLECTION, orderId), {
+      orderStatus: newStatus,
+      ...(notes !== undefined ? { adminNotes: notes } : {}),
+      updatedAt: serverTimestamp(),
+    });
+  }, []);
+
+  const updateOrderOcr = useCallback(async (orderId: string, ocrData: ReceiptOcrResult, receiptUrl?: string) => {
+    await updateDoc(doc(db, ORDERS_COLLECTION, orderId), {
+      receiptOcrData: ocrData,
+      ...(receiptUrl ? { receiptUrl } : {}),
+      updatedAt: serverTimestamp(),
+    });
+  }, []);
 
   const updateOrderPaymentStatus = useCallback(
-    async (
-      orderId: string,
-      paymentStatus: PaymentStatus,
-      orderStatus?: OrderStatus
-    ) => {
+    async (orderId: string, paymentStatus: PaymentStatus, orderStatus?: OrderStatus) => {
       await updateDoc(doc(db, ORDERS_COLLECTION, orderId), {
         paymentStatus,
         ...(orderStatus ? { orderStatus } : {}),
