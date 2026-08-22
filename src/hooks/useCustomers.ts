@@ -1,65 +1,7 @@
-import { useEffect, useState } from "react";
-import { collection, onSnapshot, query, orderBy } from "firebase/firestore";
-import { db } from "@/lib/firebase";
-
-export interface Customer {
-  id: string;
-  telegramUserId: string;
-  telegramDisplayName: string;
-  telegramUsername?: string;
-  primeMemberId: string;
-  vipTier: "Bronze" | "Silver" | "Gold";
-  points: number;
-  memberSince: number;
-  referrals: number;
-  totalSpending: number;
-  orderCount: number;
-  lastOrderAt?: number;
-}
-
-type TimestampLike = { toMillis?: () => number } | number | null | undefined;
-
-function timestampMillis(value: TimestampLike): number {
-  if (typeof value === "number") return value;
-  if (value && typeof value.toMillis === "function") return value.toMillis();
-  return Date.now();
-}
-
+import { useCallback, useEffect, useState } from "react";
+export interface Customer { id: string; telegramUserId: string; telegramDisplayName: string; telegramUsername?: string; primeMemberId: string; vipTier: "Bronze" | "Silver" | "Gold"; points: number; memberSince: number; referrals: number; totalSpending: number; orderCount: number; lastOrderAt?: number; }
 export function useCustomers() {
-  const [customers, setCustomers] = useState<Customer[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const customersQuery = query(collection(db, "customers"), orderBy("updatedAt", "desc"));
-    return onSnapshot(
-      customersQuery,
-      (snapshot) => {
-        setCustomers(snapshot.docs.map((customerDoc) => {
-          const data = customerDoc.data();
-          return {
-            id: customerDoc.id,
-            telegramUserId: String(data.telegramUserId || customerDoc.id),
-            telegramDisplayName: String(data.telegramDisplayName || "Unknown"),
-            telegramUsername: data.telegramUsername || undefined,
-            primeMemberId: String(data.primeMemberId || `PC${customerDoc.id.slice(0, 8).toUpperCase()}`),
-            vipTier: data.vipTier || "Bronze",
-            points: Number(data.points || 0),
-            memberSince: timestampMillis(data.memberSince),
-            referrals: Number(data.referrals || 0),
-            totalSpending: Number(data.totalSpending || 0),
-            orderCount: Number(data.orderCount || 0),
-            lastOrderAt: data.lastOrderAt ? timestampMillis(data.lastOrderAt) : undefined,
-          } as Customer;
-        }));
-        setLoading(false);
-      },
-      (error) => {
-        console.error("Failed to subscribe to customers:", error);
-        setCustomers([]);
-        setLoading(false);
-      }
-    );
-  }, []);
-
-  return { customers, loading };
+  const [customers, setCustomers] = useState<Customer[]>([]); const [loading, setLoading] = useState(true);
+  const load = useCallback(async () => { setLoading(true); try { const response = await fetch("/api/customers", { credentials: "same-origin" }); const data = await response.json().catch(() => ({})); if (!response.ok) throw new Error(data.error || "Unable to load customers"); setCustomers(Array.isArray(data.customers) ? data.customers.map((d: any) => ({ id: String(d.id), telegramUserId: String(d.telegramUserId || d.id), telegramDisplayName: String(d.telegramDisplayName || "Unknown"), telegramUsername: d.telegramUsername || undefined, primeMemberId: String(d.primeMemberId || `PC${String(d.id).slice(0, 8).toUpperCase()}`), vipTier: d.vipTier || "Bronze", points: Number(d.points || 0), memberSince: Number(d.memberSince || Date.now()), referrals: Number(d.referrals || 0), totalSpending: Number(d.totalSpending || 0), orderCount: Number(d.orderCount || 0), lastOrderAt: d.lastOrderAt ? Number(d.lastOrderAt) : undefined })) : []); } catch (e) { console.error(e); setCustomers([]); } finally { setLoading(false); } }, []);
+  useEffect(() => { void load(); }, [load]); return { customers, loading, refresh: load };
 }
