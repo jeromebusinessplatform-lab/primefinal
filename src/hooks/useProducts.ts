@@ -8,6 +8,10 @@ async function api<T>(url: string, options?: RequestInit): Promise<T> {
   return data as T;
 }
 
+function normalizeProduct(product: any): Product {
+  return { ...product, _id: String(product?._id ?? product?.id ?? "") } as Product;
+}
+
 export function useProducts() {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<string[]>(INITIAL_CATEGORIES);
@@ -18,8 +22,8 @@ export function useProducts() {
     setLoading(true);
     setError(null);
     try {
-      const data = await api<{ products?: Product[]; categories?: string[] }>("/api/products");
-      setProducts(Array.isArray(data.products) ? data.products : []);
+      const data = await api<{ products?: any[]; categories?: string[] }>("/api/products");
+      setProducts(Array.isArray(data.products) ? data.products.map(normalizeProduct).filter((p) => p._id) : []);
       setCategories(Array.isArray(data.categories) && data.categories.length ? data.categories : INITIAL_CATEGORIES);
     } catch (e: any) {
       console.error("Product catalog load error:", e);
@@ -30,27 +34,24 @@ export function useProducts() {
     }
   }, []);
 
-  useEffect(() => {
-    void reload();
-  }, [reload]);
+  useEffect(() => { void reload(); }, [reload]);
 
   const addProduct = async (newProd: Omit<Product, "_id">) => {
-    const data = await api<{ product: Product }>("/api/admin/products", {
-      method: "POST",
-      body: JSON.stringify(newProd),
-    });
-    setProducts((current) => [...current, data.product].sort((a, b) => Number(a.sortOrder || 0) - Number(b.sortOrder || 0)));
-    return data.product;
+    const data = await api<{ product: any }>("/api/admin/products", { method: "POST", body: JSON.stringify(newProd) });
+    const product = normalizeProduct(data.product);
+    setProducts((current) => [...current, product].sort((a, b) => Number(a.sortOrder || 0) - Number(b.sortOrder || 0)));
+    return product;
   };
 
   const updateProduct = async (id: string, updates: Partial<Product>) => {
     const current = products.find((p) => p._id === id);
-    const data = await api<{ product: Product }>(`/api/admin/products/${encodeURIComponent(id)}`, {
+    const data = await api<{ product: any }>(`/api/admin/products/${encodeURIComponent(id)}`, {
       method: "PATCH",
       body: JSON.stringify({ ...current, ...updates, _id: undefined }),
     });
-    setProducts((items) => items.map((p) => p._id === id ? data.product : p));
-    return data.product;
+    const product = normalizeProduct(data.product);
+    setProducts((items) => items.map((p) => p._id === id ? product : p));
+    return product;
   };
 
   const removeProduct = async (id: string) => {
@@ -89,31 +90,13 @@ export function useProducts() {
         const prod = products.find((p) => p._id === item.productId);
         if (!prod) continue;
         const originalPrice = prod.salePrice ?? prod.price;
-        if (item.pricingType === "fixed") {
-          total += typeof item.customPrice === "number" ? item.customPrice : originalPrice;
-        } else if (item.pricingType === "percentage_off") {
-          const pct = item.discountPercent ?? 0;
-          const discounted = originalPrice * (1 - pct / 100);
-          total += Math.max(0, discounted);
-        }
+        if (item.pricingType === "fixed") total += typeof item.customPrice === "number" ? item.customPrice : originalPrice;
+        else if (item.pricingType === "percentage_off") total += Math.max(0, originalPrice * (1 - (item.discountPercent ?? 0) / 100));
       }
       return Math.round(total * 100) / 100;
     },
     [products]
   );
 
-  return {
-    products,
-    categories,
-    loading,
-    error,
-    reload,
-    addProduct,
-    updateProduct,
-    removeProduct,
-    addCategory,
-    editCategory,
-    removeCategory,
-    computeBundlePrice,
-  };
+  return { products, categories, loading, error, reload, addProduct, updateProduct, removeProduct, addCategory, editCategory, removeCategory, computeBundlePrice };
 }
