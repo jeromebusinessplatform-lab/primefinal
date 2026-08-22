@@ -1,4 +1,17 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
+import {
+  collection,
+  onSnapshot,
+  query,
+  orderBy,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  doc,
+  serverTimestamp,
+  Timestamp,
+} from "firebase/firestore";
+import { db } from "@/lib/firebase.ts";
 import type { ReceiptOcrResult } from "@/types/ocr.ts";
 
 export type OrderStatus =
@@ -18,6 +31,7 @@ export type OrderStatus =
   | "CANCELLED";
 
 export type PaymentStatus = "PENDING" | "CONFIRMED" | "FAILED" | "CLEARED";
+export type DeliveryPaymentOption = "PAY_AT_CHECKOUT" | "PAY_UPON_FULFILLMENT";
 
 export interface OrderItem {
   productId: string;
@@ -43,6 +57,9 @@ export interface CustomerOrder {
   contactNumber: string;
   deliveryAddress: string;
   courierName: string;
+  deliveryProviderId?: string;
+  deliveryCharge?: number;
+  deliveryPaymentMethod?: DeliveryPaymentOption;
   paymentMethodName: string;
   paymentStatus: PaymentStatus;
   orderStatus: OrderStatus;
@@ -52,188 +69,130 @@ export interface CustomerOrder {
   adminNotes?: string;
   receiptUrl?: string;
   receiptOcrData?: ReceiptOcrResult;
-  deliveryPaymentOption: 'PAY_AT_CHECKOUT' | 'PAY_UPON_FULFILLMENT';
+  deliveryPaymentOption: DeliveryPaymentOption;
 }
 
-export const INITIAL_ORDERS: CustomerOrder[] = [
-  {
-    _id: "ord-1001",
-    orderNumber: "PRIME-9021",
-    _creationTime: Date.now() - 1000 * 60 * 15,
-    telegramUserId: "1085949511",
-    telegramDisplayName: "Marcus Vance",
-    telegramUsername: "marcus_v",
-    items: [
-      {
-        productId: "prod-2",
-        productName: "Wireless Headphones",
-        quantity: 2,
-        unitPrice: 119.99,
-        subtotal: 239.98,
-      },
-      {
-        productId: "prod-6",
-        productName: "Power Bank 10000mAh",
-        quantity: 1,
-        unitPrice: 39.99,
-        subtotal: 39.99,
-      },
-    ],
-    subtotal: 279.97,
-    discount: 0,
-    deliveryFee: 0,
-    total: 293.97,
-    receiverName: "Marcus Vance",
-    contactNumber: "+1 (555) 019-2834",
-    deliveryAddress: "450 Silicon Way, Tech District, Ste 800",
-    courierName: "Priority Dispatch Express",
-    paymentMethodName: "Telegram Pay",
-    paymentStatus: "CONFIRMED",
-    orderStatus: "REVIEW",
-    queuePosition: 1,
-    estimatedWaitingMinutes: 12,
-    estimatedDispatchTime: "2:45 PM",
-    adminNotes: "Customer requested contactless lobby drop-off.",
-    deliveryPaymentOption: 'PAY_AT_CHECKOUT',
-  },
-  {
-    _id: "ord-1002",
-    orderNumber: "PRIME-9022",
-    _creationTime: Date.now() - 1000 * 60 * 45,
-    telegramUserId: "tg_881245",
-    telegramDisplayName: "Sarah Jenkins",
-    telegramUsername: "sarahj_fit",
-    items: [
-      {
-        productId: "prod-1",
-        productName: "BLAU Digital Smartwatch",
-        quantity: 1,
-        unitPrice: 129.99,
-        subtotal: 129.99,
-      },
-    ],
-    subtotal: 129.99,
-    discount: 10,
-    deliveryFee: 9.99,
-    total: 136.48,
-    receiverName: "Sarah Jenkins",
-    contactNumber: "+1 (555) 392-1920",
-    deliveryAddress: "14 Palm Avenue, Metro Bay",
-    courierName: "Priority Dispatch Express",
-    paymentMethodName: "Direct Transfer OCR",
-    paymentStatus: "CONFIRMED",
-    orderStatus: "START_PACKING",
-    queuePosition: 2,
-    estimatedWaitingMinutes: 20,
-    estimatedDispatchTime: "3:10 PM",
-    deliveryPaymentOption: 'PAY_UPON_FULFILLMENT',
-  },
-];
+type FirestoreOrder = Omit<CustomerOrder, "_id" | "_creationTime"> & {
+  createdAt?: Timestamp | null;
+  updatedAt?: Timestamp | null;
+};
 
-const ORDERS_STORAGE_KEY = "prime_app_orders";
+const ORDERS_COLLECTION = "orders";
+
+function fromFirestore(id: string, data: FirestoreOrder): CustomerOrder {
+  const createdAt = data.createdAt;
+  const creationTime = createdAt instanceof Timestamp ? createdAt.toMillis() : Date.now();
+
+  return {
+    ...data,
+    _id: id,
+    _creationTime: creationTime,
+  };
+}
 
 export function useOrders(telegramUserId?: string) {
-  const [orders, setOrders] = useState<CustomerOrder[]>(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem(ORDERS_STORAGE_KEY);
-      if (saved) {
-        try {
-          const parsed = JSON.parse(saved);
-          return parsed;
-        } catch {
-          return INITIAL_ORDERS;
-        }
-      }
-    }
-    return INITIAL_ORDERS;
-  });
+  const [orders, setOrders] = useState<CustomerOrder[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    try {
-      localStorage.setItem(ORDERS_STORAGE_KEY, JSON.stringify(orders));
-    } catch {
-      // ignore
-    }
-  }, [orders]);
+    setLoading(true);
+    setError(null);
+
+    const ordersQuery = query(
+      collection(db, ORDERS_COLLECTION),
+      orderBy("createdAt", "desc")
+    );
+
+    const unsubscribe = onSnapshot(
+      ordersQuery,
+      (snapshot) => {
+        const nextOrders = snapshot.docs.map((snapshotDoc) =>
+          fromFirestore(snapshotDoc.id, snapshotDoc.data() as FirestoreOrder)
+        );
+        setOrders(nextOrders);
+        setLoading(false);
+      },
+      (snapshotError) => {
+        console.error("Failed to subscribe to orders:", snapshotError);
+        setError("Unable to load orders. Please refresh and try again.");
+        setLoading(false);
+      }
+    );
+
+    return unsubscribe;
+  }, []);
+
+  const createOrder = useCallback(
+    async (orderData: Omit<CustomerOrder, "_id" | "_creationTime">) => {
+      const now = serverTimestamp();
+      const orderDocument: FirestoreOrder = {
+        ...orderData,
+        createdAt: now as unknown as Timestamp,
+        updatedAt: now as unknown as Timestamp,
+      };
+
+      const created = await addDoc(collection(db, ORDERS_COLLECTION), orderDocument);
+
+      return {
+        ...orderData,
+        _id: created.id,
+        _creationTime: Date.now(),
+      } as CustomerOrder;
+    },
+    []
+  );
+
+  const updateOrderStatus = useCallback(
+    async (orderId: string, newStatus: OrderStatus, notes?: string) => {
+      await updateDoc(doc(db, ORDERS_COLLECTION, orderId), {
+        orderStatus: newStatus,
+        ...(notes !== undefined ? { adminNotes: notes } : {}),
+        updatedAt: serverTimestamp(),
+      });
+    },
+    []
+  );
+
+  const updateOrderOcr = useCallback(
+    async (orderId: string, ocrData: ReceiptOcrResult, receiptUrl?: string) => {
+      await updateDoc(doc(db, ORDERS_COLLECTION, orderId), {
+        receiptOcrData: ocrData,
+        ...(receiptUrl ? { receiptUrl } : {}),
+        updatedAt: serverTimestamp(),
+      });
+    },
+    []
+  );
+
+  const updateOrderPaymentStatus = useCallback(
+    async (
+      orderId: string,
+      paymentStatus: PaymentStatus,
+      orderStatus?: OrderStatus
+    ) => {
+      await updateDoc(doc(db, ORDERS_COLLECTION, orderId), {
+        paymentStatus,
+        ...(orderStatus ? { orderStatus } : {}),
+        updatedAt: serverTimestamp(),
+      });
+    },
+    []
+  );
+
+  const deleteOrder = useCallback(async (orderId: string) => {
+    await deleteDoc(doc(db, ORDERS_COLLECTION, orderId));
+  }, []);
 
   const customerFilteredOrders = telegramUserId
-    ? orders.filter((o) => o.telegramUserId === telegramUserId)
+    ? orders.filter((order) => order.telegramUserId === telegramUserId)
     : orders;
-
-  const createOrder = async (
-    orderData: Omit<CustomerOrder, "_id" | "_creationTime">
-  ) => {
-    const newOrder: CustomerOrder = {
-      ...orderData,
-      _id: `ord-${Date.now()}`,
-      _creationTime: Date.now(),
-    };
-    setOrders((prev) => [newOrder, ...prev]);
-    return newOrder;
-  };
-
-  const updateOrderStatus = (
-    orderId: string,
-    newStatus: OrderStatus,
-    notes?: string
-  ) => {
-    setOrders((prev) =>
-      prev.map((o) =>
-        o._id === orderId
-          ? {
-              ...o,
-              orderStatus: newStatus,
-              ...(notes !== undefined ? { adminNotes: notes } : {}),
-            }
-          : o
-      )
-    );
-  };
-
-  const updateOrderOcr = (
-    orderId: string,
-    ocrData: ReceiptOcrResult,
-    receiptUrl?: string
-  ) => {
-    setOrders((prev) =>
-      prev.map((o) =>
-        o._id === orderId
-          ? {
-              ...o,
-              receiptOcrData: ocrData,
-              ...(receiptUrl ? { receiptUrl } : {}),
-            }
-          : o
-      )
-    );
-  };
-
-  const updateOrderPaymentStatus = (
-    orderId: string,
-    paymentStatus: PaymentStatus,
-    orderStatus?: OrderStatus
-  ) => {
-    setOrders((prev) =>
-      prev.map((o) =>
-        o._id === orderId
-          ? {
-              ...o,
-              paymentStatus,
-              ...(orderStatus ? { orderStatus } : {}),
-            }
-          : o
-      )
-    );
-  };
-
-  const deleteOrder = (orderId: string) => {
-    setOrders((prev) => prev.filter((o) => o._id !== orderId));
-  };
 
   return {
     orders: customerFilteredOrders,
     allOrders: orders,
-    loading: false,
+    loading,
+    error,
     createOrder,
     updateOrderStatus,
     updateOrderOcr,
