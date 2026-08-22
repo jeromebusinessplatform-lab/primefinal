@@ -27,6 +27,9 @@ import AdminReceiptOcrPage from "./pages/admin/receipt-ocr.tsx";
 import AdminAnalyticsPage from "./pages/admin/analytics.tsx";
 import AdminChargesPage from "./pages/admin/charges.tsx";
 import AdminDiscountsPage from "./pages/admin/discounts.tsx";
+import AdminCashflowPage from "./pages/admin/cashflow.tsx";
+import AdminSupportPage from "./pages/admin/support.tsx";
+import AdminDiagnosticsPage from "./pages/admin/diagnostics.tsx";
 import InstallPrompt from "./components/InstallPrompt.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
@@ -42,7 +45,7 @@ export default function App() {
     <TelegramProvider><CartProvider><AdminProvider>
       <Toaster /><OrientationLock /><InstallPrompt />
       <div className="w-full min-h-[100dvh] flex flex-col items-center justify-start bg-neutral-950 overflow-x-hidden">
-        <div className="w-full max-w-[412px] min-h-[100dvh] bg-[#f3f4f6] relative flex flex-col shadow-2xl overflow-x-hidden border-x border-neutral-800/20">
+        <div className="w-full max-w-[900px] min-h-[100dvh] bg-white relative flex flex-col shadow-2xl overflow-x-hidden border-x border-neutral-800/20">
           <BrowserRouter><Routes>
             <Route path="/" element={<Navigate to="/shop" replace />} />
             <Route path="/shop" element={<ShopLayout />}>
@@ -50,7 +53,7 @@ export default function App() {
             </Route>
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/admin" element={<AdminGuard><AdminLayout /></AdminGuard>}>
-              <Route index element={<AdminDashboard />} /><Route path="orders" element={<AdminOrdersPage />} /><Route path="analytics" element={<AdminAnalyticsPage />} /><Route path="customers" element={<AdminCustomersPage />} /><Route path="ocr" element={<AdminReceiptOcrPage />} /><Route path="products" element={<AdminProductsPage />} /><Route path="courier" element={<AdminCourierPage />} /><Route path="charges" element={<AdminChargesPage />} /><Route path="discounts" element={<AdminDiscountsPage />} /><Route path="settings" element={<AdminSettingsPage />} /><Route path="*" element={<Navigate to="/admin" replace />} />
+              <Route index element={<AdminDashboard />} /><Route path="orders" element={<AdminOrdersPage />} /><Route path="analytics" element={<AdminAnalyticsPage />} /><Route path="customers" element={<AdminCustomersPage />} /><Route path="ocr" element={<AdminReceiptOcrPage />} /><Route path="products" element={<AdminProductsPage />} /><Route path="courier" element={<AdminCourierPage />} /><Route path="charges" element={<AdminChargesPage />} /><Route path="discounts" element={<AdminDiscountsPage />} /><Route path="cashflow" element={<AdminCashflowPage />} /><Route path="support" element={<AdminSupportPage />} /><Route path="settings" element={<AdminSettingsPage />} /><Route path="diagnostics" element={<AdminDiagnosticsPage />} /><Route path="*" element={<Navigate to="/admin" replace />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes><GlobalProprietaryFooter /></BrowserRouter>
