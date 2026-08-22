@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { ClipboardList, Package, Users, Truck, ReceiptText, BadgePercent, BarChart3, WalletCards, Headphones, Settings, Stethoscope } from "lucide-react";
+import { ClipboardList, Package, Users, Truck, ReceiptText, BadgePercent, BarChart3, WalletCards, Headphones, Settings, Stethoscope, type LucideIcon } from "lucide-react";
 import { useQueueStats } from "@/hooks/useQueueStats.ts";
 
 const modules = [
@@ -15,7 +15,7 @@ const modules = [
   { title: "SUPPORT", icon: Headphones, to: "/admin/support" },
 ];
 
-function ModuleButton({ title, Icon, onClick }: { title: string; Icon: typeof ClipboardList; onClick: () => void }) {
+function ModuleButton({ title, Icon, onClick }: { title: string; Icon: LucideIcon; onClick: () => void }) {
   return (
     <button
       type="button"
@@ -44,9 +44,7 @@ export default function AdminDashboardPage() {
       </header>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 sm:gap-6">
-        {modules.map(({ title, icon: Icon, to }) => (
-          <ModuleButton key={title} title={title} Icon={Icon} onClick={() => navigate(to)} />
-        ))}
+        {modules.map(({ title, icon: Icon, to }) => <ModuleButton key={title} title={title} Icon={Icon} onClick={() => navigate(to)} />)}
       </div>
 
       <div className="grid grid-cols-2 gap-4 sm:gap-6 mt-8 sm:mt-10">
