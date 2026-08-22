@@ -76,7 +76,7 @@ export function GeoAddressAutocomplete({
       <div className="flex items-center justify-between">
         <label
           className="text-[11px] font-normal text-neutral-600 uppercase flex items-center gap-1"
-          style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
+          style={{ fontFamily: "'Ubuntu', sans-serif" }}
         >
           <MapPin size={12} className="text-neutral-500" /> Delivery Address & Geolocation
         </label>
@@ -88,7 +88,7 @@ export function GeoAddressAutocomplete({
             onClick={onDetectGps}
             disabled={isLocating}
             className="text-[10px] text-neutral-700 bg-neutral-100 hover:bg-neutral-200 border border-neutral-200/80 px-2 py-0.5 rounded-full flex items-center gap-1 transition-colors cursor-pointer disabled:opacity-50"
-            style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
+            style={{ fontFamily: "'Ubuntu', sans-serif" }}
             title="Detect GPS coordinates and reverse geocode"
           >
             {isLocating ? <Loader2 size={10} className="animate-spin text-neutral-500" /> : <Navigation size={10} className="text-blue-600" />}
@@ -100,7 +100,7 @@ export function GeoAddressAutocomplete({
             onClick={onDetectIp}
             disabled={isLocating}
             className="text-[10px] text-neutral-700 bg-neutral-100 hover:bg-neutral-200 border border-neutral-200/80 px-2 py-0.5 rounded-full flex items-center gap-1 transition-colors cursor-pointer disabled:opacity-50"
-            style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
+            style={{ fontFamily: "'Ubuntu', sans-serif" }}
             title="Detect approximate location via Geoapify IP Geolocation"
           >
             <Globe size={10} className="text-emerald-600" />
@@ -124,7 +124,7 @@ export function GeoAddressAutocomplete({
             onFocus={() => setIsOpen(true)}
             placeholder="Type street address, building, district, or city..."
             className="w-full bg-neutral-50 border border-neutral-200 rounded-xl pl-3 pr-9 py-2.5 text-xs text-neutral-900 outline-none focus:border-black font-normal transition-colors placeholder:text-neutral-400"
-            style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: "14px" }}
+            style={{ fontFamily: "'Ubuntu', sans-serif", fontSize: "14px" }}
           />
 
           <div className="absolute right-2.5 flex items-center text-neutral-400">
@@ -159,7 +159,7 @@ export function GeoAddressAutocomplete({
                     </div>
                     <div
                       className="text-[11px] text-neutral-500 font-normal flex items-center gap-2 mt-0.5"
-                      style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
+                      style={{ fontFamily: "'Ubuntu', sans-serif" }}
                     >
                       {item.city && (
                         <span className="bg-neutral-100 text-neutral-600 px-1.5 py-0.2 rounded text-[10px]">

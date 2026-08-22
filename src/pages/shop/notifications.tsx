@@ -59,13 +59,13 @@ export default function NotificationsPage() {
           >
             NOTIFICATIONS
           </h1>
-          <p className="text-xs text-neutral-500 font-normal" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
+          <p className="text-xs text-neutral-500 font-normal" style={{ fontFamily: "'Ubuntu', sans-serif" }}>
             5 unread customer alerts
           </p>
         </div>
         <span
           className="bg-black text-white text-[11px] font-normal px-2.5 py-1 rounded-full uppercase"
-          style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
+          style={{ fontFamily: "'Ubuntu', sans-serif" }}
         >
           All Cleared
         </span>
@@ -93,11 +93,11 @@ export default function NotificationsPage() {
                   >
                     {n.title}
                   </h3>
-                  <span className="text-[10px] text-neutral-400 font-normal" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
+                  <span className="text-[10px] text-neutral-400 font-normal" style={{ fontFamily: "'Ubuntu', sans-serif" }}>
                     {n.time}
                   </span>
                 </div>
-                <p className="text-xs text-neutral-600 mt-0.5 leading-relaxed font-normal" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
+                <p className="text-xs text-neutral-600 mt-0.5 leading-relaxed font-normal" style={{ fontFamily: "'Ubuntu', sans-serif" }}>
                   {n.message}
                 </p>
               </div>

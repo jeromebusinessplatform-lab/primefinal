@@ -134,7 +134,7 @@ export function ProductBundleManager({
           type="button"
           onClick={handleAddItem}
           className="flex items-center gap-1 bg-black text-white px-2.5 py-1 rounded-lg text-xs hover:bg-neutral-800 cursor-pointer font-normal shadow-2xs"
-          style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
+          style={{ fontFamily: "'Ubuntu', sans-serif" }}
         >
           <Plus size={12} /> Add Combined Product
         </button>

@@ -160,7 +160,7 @@ export default function AdminOrdersPage() {
           >
             Orders Management
           </h1>
-          <p className="text-neutral-500 text-xs mt-0.5 font-normal" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
+          <p className="text-neutral-500 text-xs mt-0.5 font-normal" style={{ fontFamily: "'Ubuntu', sans-serif" }}>
             Real-time customer orders, payment approvals, and courier dispatches.
           </p>
         </div>
@@ -169,7 +169,7 @@ export default function AdminOrdersPage() {
           <button
             onClick={() => setShowSalesAnalytics((prev) => !prev)}
             className="flex items-center gap-1.5 bg-black hover:bg-neutral-800 text-white text-xs px-3 py-2 rounded-xl transition cursor-pointer font-normal shadow-2xs"
-            style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
+            style={{ fontFamily: "'Ubuntu', sans-serif" }}
           >
             <TrendingUp size={13} />
             <span>{showSalesAnalytics ? "Hide Sales Chart" : "Show 30-Day Sales Chart"}</span>
@@ -177,14 +177,14 @@ export default function AdminOrdersPage() {
           </button>
 
           <div className="bg-white border border-neutral-200 rounded-xl px-3.5 py-1.5 flex items-center gap-2">
-            <span className="text-neutral-500 text-xs font-normal" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>Active Orders:</span>
-            <span className="text-black font-semibold text-sm" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>{orders.length}</span>
+            <span className="text-neutral-500 text-xs font-normal" style={{ fontFamily: "'Ubuntu', sans-serif" }}>Active Orders:</span>
+            <span className="text-black font-semibold text-sm" style={{ fontFamily: "'Ubuntu', sans-serif" }}>{orders.length}</span>
           </div>
 
           <button
             onClick={() => toast.success("Synced latest orders")}
             className="flex items-center gap-1.5 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 text-xs px-3 py-2 rounded-xl transition cursor-pointer font-normal"
-            style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
+            style={{ fontFamily: "'Ubuntu', sans-serif" }}
           >
             <RefreshCw size={13} /> Refresh Sync
           </button>
@@ -200,28 +200,28 @@ export default function AdminOrdersPage() {
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <div className="bg-white border border-neutral-200 rounded-xl p-3.5 shadow-2xs">
-          <div className="text-neutral-500 text-[10px] font-normal uppercase tracking-wider" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>Pending Review</div>
+          <div className="text-neutral-500 text-[10px] font-normal uppercase tracking-wider" style={{ fontFamily: "'Ubuntu', sans-serif" }}>Pending Review</div>
           <div className="text-blue-950 text-2xl font-normal mt-1" style={{ fontFamily: "'Roboto Condensed', sans-serif" }}>
             {orders.filter((o) => o.orderStatus === "REVIEW").length}
           </div>
         </div>
 
         <div className="bg-white border border-neutral-200 rounded-xl p-3.5 shadow-2xs">
-          <div className="text-neutral-500 text-[10px] font-normal uppercase tracking-wider" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>In Preparation</div>
+          <div className="text-neutral-500 text-[10px] font-normal uppercase tracking-wider" style={{ fontFamily: "'Ubuntu', sans-serif" }}>In Preparation</div>
           <div className="text-blue-950 text-2xl font-normal mt-1" style={{ fontFamily: "'Roboto Condensed', sans-serif" }}>
             {orders.filter((o) => ["PAYMENT_CONFIRMED", "START_PACKING", "READY"].includes(o.orderStatus)).length}
           </div>
         </div>
 
         <div className="bg-white border border-neutral-200 rounded-xl p-3.5 shadow-2xs">
-          <div className="text-neutral-500 text-[10px] font-normal uppercase tracking-wider" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>Out for Delivery</div>
+          <div className="text-neutral-500 text-[10px] font-normal uppercase tracking-wider" style={{ fontFamily: "'Ubuntu', sans-serif" }}>Out for Delivery</div>
           <div className="text-blue-950 text-2xl font-normal mt-1" style={{ fontFamily: "'Roboto Condensed', sans-serif" }}>
             {orders.filter((o) => ["AWAITING_RIDER", "DISPATCHED"].includes(o.orderStatus)).length}
           </div>
         </div>
 
         <div className="bg-white border border-neutral-200 rounded-xl p-3.5 shadow-2xs">
-          <div className="text-neutral-500 text-[10px] font-normal uppercase tracking-wider" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>Delivered</div>
+          <div className="text-neutral-500 text-[10px] font-normal uppercase tracking-wider" style={{ fontFamily: "'Ubuntu', sans-serif" }}>Delivered</div>
           <div className="text-blue-950 text-2xl font-normal mt-1" style={{ fontFamily: "'Roboto Condensed', sans-serif" }}>
             {orders.filter((o) => o.orderStatus === "DELIVERED").length}
           </div>
@@ -237,7 +237,7 @@ export default function AdminOrdersPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full bg-transparent text-sm text-black placeholder-neutral-400 outline-none font-normal"
-            style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
+            style={{ fontFamily: "'Ubuntu', sans-serif" }}
           />
         </div>
 
@@ -249,7 +249,7 @@ export default function AdminOrdersPage() {
               className={`px-3 py-1.5 rounded-lg text-xs font-normal whitespace-nowrap cursor-pointer transition ${
                 statusFilter === st ? "bg-black text-white" : "bg-white text-neutral-600 hover:text-black border border-neutral-200"
               }`}
-              style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
+              style={{ fontFamily: "'Ubuntu', sans-serif" }}
             >
               {st}
             </button>
@@ -308,7 +308,7 @@ export default function AdminOrdersPage() {
                         </span>
                       ) : null}
                     </div>
-                    <div className="text-neutral-500 text-xs mt-1 font-normal" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
+                    <div className="text-neutral-500 text-xs mt-1 font-normal" style={{ fontFamily: "'Ubuntu', sans-serif" }}>
                       {order.receiverName} {order.telegramUsername ? `(@${order.telegramUsername})` : ""}
                     </div>
                   </div>
@@ -316,17 +316,17 @@ export default function AdminOrdersPage() {
                   <div className="text-right">
                     <div
                       className="text-black font-normal text-lg"
-                      style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
+                      style={{ fontFamily: "'Ubuntu', sans-serif" }}
                     >
                       {formatCurrency(order.total)}
                     </div>
-                    <div className="text-neutral-400 text-[11px] font-normal" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
+                    <div className="text-neutral-400 text-[11px] font-normal" style={{ fontFamily: "'Ubuntu', sans-serif" }}>
                       {new Date(order._creationTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                     </div>
                   </div>
                 </div>
 
-                <div className="mt-3 pt-3 border-t border-neutral-100 flex flex-wrap items-center justify-between gap-2 text-xs text-neutral-500 font-normal" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
+                <div className="mt-3 pt-3 border-t border-neutral-100 flex flex-wrap items-center justify-between gap-2 text-xs text-neutral-500 font-normal" style={{ fontFamily: "'Ubuntu', sans-serif" }}>
                   <div className="flex items-center gap-1.5">
                     <Package size={13} className="text-neutral-400" />
                     <span>
@@ -354,7 +354,7 @@ export default function AdminOrdersPage() {
                   >
                     #{selectedOrder.orderNumber}
                   </div>
-                  <div className="text-xs text-neutral-500 font-normal" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
+                  <div className="text-xs text-neutral-500 font-normal" style={{ fontFamily: "'Ubuntu', sans-serif" }}>
                     {new Date(selectedOrder._creationTime).toLocaleString()}
                   </div>
                 </div>
@@ -369,14 +369,14 @@ export default function AdminOrdersPage() {
               </div>
 
               <div>
-                <label className="block text-neutral-500 text-[11px] font-normal uppercase tracking-wider mb-1.5" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
+                <label className="block text-neutral-500 text-[11px] font-normal uppercase tracking-wider mb-1.5" style={{ fontFamily: "'Ubuntu', sans-serif" }}>
                   Update Order Status
                 </label>
                 <select
                   value={selectedOrder.orderStatus}
                   onChange={(e) => handleUpdateStatus(selectedOrder._id, e.target.value as OrderStatus)}
                   className="w-full bg-neutral-100 border border-neutral-300 text-neutral-900 text-xs rounded-xl px-3 py-2.5 outline-none cursor-pointer font-normal"
-                  style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: "14px" }}
+                  style={{ fontFamily: "'Ubuntu', sans-serif", fontSize: "14px" }}
                 >
                   {(Object.keys(STATUS_LABELS) as OrderStatus[]).map((st) => (
                     <option key={st} value={st}>
@@ -400,7 +400,7 @@ export default function AdminOrdersPage() {
                 </div>
 
                 {selectedOrder.receiptOcrData ? (
-                  <div className="bg-neutral-50 rounded-xl p-3 border border-neutral-200 text-xs space-y-2.5" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
+                  <div className="bg-neutral-50 rounded-xl p-3 border border-neutral-200 text-xs space-y-2.5" style={{ fontFamily: "'Ubuntu', sans-serif" }}>
                     <div className="flex items-center justify-between">
                       <span className="font-bold text-black text-sm">
                         {selectedOrder.receiptOcrData.channel}
@@ -494,7 +494,7 @@ export default function AdminOrdersPage() {
                     )}
                   </div>
                 ) : selectedOrder.receiptUrl ? (
-                  <div className="bg-neutral-50 rounded-xl p-3 border border-neutral-200 text-xs space-y-2" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
+                  <div className="bg-neutral-50 rounded-xl p-3 border border-neutral-200 text-xs space-y-2" style={{ fontFamily: "'Ubuntu', sans-serif" }}>
                     <div className="flex items-center justify-between">
                       <span className="text-neutral-700">Receipt attached (unparsed)</span>
                       <a
@@ -519,7 +519,7 @@ export default function AdminOrdersPage() {
                   </div>
                 ) : (
                   <div className="bg-neutral-50 rounded-xl p-3 border border-dashed border-neutral-200 text-xs text-center space-y-2">
-                    <p className="text-neutral-400 text-[11px]" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
+                    <p className="text-neutral-400 text-[11px]" style={{ fontFamily: "'Ubuntu', sans-serif" }}>
                       No payment receipt attached by customer.
                     </p>
                     <label className="inline-flex items-center gap-1 text-[11px] bg-white border border-neutral-300 text-neutral-700 hover:text-black px-2.5 py-1 rounded-lg cursor-pointer transition">
@@ -549,7 +549,7 @@ export default function AdminOrdersPage() {
                 <div className="text-xs font-normal text-neutral-400 uppercase tracking-wider" style={{ fontFamily: "'Roboto Condensed', sans-serif" }}>
                   Customer & Delivery
                 </div>
-                <div className="bg-neutral-50 rounded-xl p-3 text-xs space-y-1.5 font-normal border border-neutral-100" style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: "13px" }}>
+                <div className="bg-neutral-50 rounded-xl p-3 text-xs space-y-1.5 font-normal border border-neutral-100" style={{ fontFamily: "'Ubuntu', sans-serif", fontSize: "13px" }}>
                   <div className="flex justify-between">
                     <span className="text-neutral-500">Receiver:</span>
                     <span className="text-black font-medium">{selectedOrder.receiverName}</span>
@@ -577,7 +577,7 @@ export default function AdminOrdersPage() {
                 <div className="text-xs font-normal text-neutral-400 uppercase tracking-wider" style={{ fontFamily: "'Roboto Condensed', sans-serif" }}>
                   Ordered Items
                 </div>
-                <div className="space-y-1.5 font-normal" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
+                <div className="space-y-1.5 font-normal" style={{ fontFamily: "'Ubuntu', sans-serif" }}>
                   {selectedOrder.items.map((it, idx) => (
                     <div key={idx} className="flex justify-between text-xs py-1 border-b border-neutral-100">
                       <span className="text-neutral-700">
@@ -604,7 +604,7 @@ export default function AdminOrdersPage() {
               </div>
 
               <div className="pt-2 border-t border-neutral-100">
-                <label className="block text-neutral-500 text-[11px] font-normal uppercase tracking-wider mb-1" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
+                <label className="block text-neutral-500 text-[11px] font-normal uppercase tracking-wider mb-1" style={{ fontFamily: "'Ubuntu', sans-serif" }}>
                   Internal Notes
                 </label>
                 <textarea
@@ -613,7 +613,7 @@ export default function AdminOrdersPage() {
                   onChange={(e) => handleUpdateNotes(selectedOrder._id, e.target.value)}
                   placeholder="Add notes for dispatch team..."
                   className="w-full bg-neutral-50 border border-neutral-200 text-neutral-800 text-xs rounded-xl p-2.5 outline-none resize-none placeholder-neutral-400 font-normal"
-                  style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
+                  style={{ fontFamily: "'Ubuntu', sans-serif" }}
                 />
               </div>
 
@@ -621,7 +621,7 @@ export default function AdminOrdersPage() {
                 type="button"
                 onClick={() => handleDelete(selectedOrder._id)}
                 className="w-full flex items-center justify-center gap-1.5 text-xs text-red-600 hover:text-red-700 hover:bg-red-50 p-2 rounded-xl border border-red-200 cursor-pointer transition-colors"
-                style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
+                style={{ fontFamily: "'Ubuntu', sans-serif" }}
               >
                 <Trash2 size={13} /> Remove Order
               </button>
@@ -629,7 +629,7 @@ export default function AdminOrdersPage() {
           ) : (
             <div className="bg-white border border-neutral-200 rounded-2xl p-8 text-center text-neutral-400 shadow-2xs">
               <Eye size={28} className="mx-auto mb-2 opacity-30" />
-              <p className="text-xs font-normal" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
+              <p className="text-xs font-normal" style={{ fontFamily: "'Ubuntu', sans-serif" }}>
                 Select an order from the list to review details and update its processing status.
               </p>
             </div>

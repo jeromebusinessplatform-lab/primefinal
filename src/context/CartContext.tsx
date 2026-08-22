@@ -24,6 +24,8 @@ interface CartContextType {
   selectedCount: number;
   subtotal: number;
   selectedSubtotal: number;
+  pulseCart: () => void;
+  pulse: number;
 }
 
 const CartContext = createContext<CartContextType | null>(null);
@@ -45,6 +47,12 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     return [];
   });
 
+  const [pulse, setPulse] = useState(0);
+
+  const pulseCart = useCallback(() => {
+    setPulse((p) => p + 1);
+  }, []);
+
   useEffect(() => {
     try {
       localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
@@ -65,7 +73,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       }
       return [...prev, { ...item, selected: true }];
     });
-  }, []);
+    pulseCart();
+  }, [pulseCart]);
 
   const updateQuantity = useCallback((productId: string, quantity: number) => {
     if (quantity <= 0) {
@@ -124,6 +133,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         selectedCount,
         subtotal,
         selectedSubtotal,
+        pulseCart,
+        pulse,
       }}
     >
       {children}

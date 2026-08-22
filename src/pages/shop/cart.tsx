@@ -45,14 +45,14 @@ export default function CartPage() {
           >
             SHOPPING CART
           </h1>
-          <p className="text-xs text-neutral-500 font-normal" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
+          <p className="text-xs text-neutral-500 font-normal" style={{ fontFamily: "'Ubuntu', sans-serif" }}>
             {selectedCount} of {totalItems} items selected for checkout
           </p>
         </div>
         <Link
           to="/shop"
           className="text-xs font-normal text-black border border-neutral-200 px-3 py-1.5 rounded-lg hover:bg-neutral-50"
-          style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
+          style={{ fontFamily: "'Ubuntu', sans-serif" }}
         >
           Add Items
         </Link>
@@ -67,13 +67,13 @@ export default function CartPage() {
           >
             Your cart is empty
           </h2>
-          <p className="text-xs text-neutral-500 mt-1 mb-5 font-normal" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
+          <p className="text-xs text-neutral-500 mt-1 mb-5 font-normal" style={{ fontFamily: "'Ubuntu', sans-serif" }}>
             Explore our catalog to add items to your cart.
           </p>
           <Link
             to="/shop"
             className="inline-flex items-center gap-2 bg-black text-white px-5 py-2.5 rounded-xl font-normal text-xs uppercase tracking-wide hover:bg-neutral-800 transition-colors"
-            style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
+            style={{ fontFamily: "'Ubuntu', sans-serif" }}
           >
             Browse Products <ArrowRight size={14} />
           </Link>
@@ -86,7 +86,7 @@ export default function CartPage() {
               type="button"
               onClick={handleToggleAll}
               className="flex items-center gap-2 text-xs font-medium text-neutral-800 hover:text-black cursor-pointer select-none"
-              style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: "13px" }}
+              style={{ fontFamily: "'Ubuntu', sans-serif", fontSize: "13px" }}
             >
               {allSelected ? (
                 <CheckSquare size={16} className="text-black" />
@@ -98,7 +98,7 @@ export default function CartPage() {
 
             <span
               className="text-xs text-neutral-500 font-mono"
-              style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
+              style={{ fontFamily: "'Ubuntu', sans-serif" }}
             >
               {selectedItems.length} product{selectedItems.length === 1 ? "" : "s"} selected
             </span>
@@ -157,7 +157,7 @@ export default function CartPage() {
 
                   <div
                     className="text-xs text-black font-normal mt-0.5"
-                    style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
+                    style={{ fontFamily: "'Ubuntu', sans-serif" }}
                   >
                     {formatCurrency(item.unitPrice)} each
                   </div>
@@ -174,7 +174,7 @@ export default function CartPage() {
                       </button>
                       <span
                         className="px-2 text-xs font-normal text-black font-mono"
-                        style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
+                        style={{ fontFamily: "'Ubuntu', sans-serif" }}
                       >
                         {item.quantity}
                       </span>
@@ -189,7 +189,7 @@ export default function CartPage() {
 
                     <div
                       className="text-xs font-semibold text-neutral-900 font-mono"
-                      style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
+                      style={{ fontFamily: "'Ubuntu', sans-serif" }}
                     >
                       {formatCurrency(item.unitPrice * item.quantity)}
                     </div>
@@ -210,7 +210,7 @@ export default function CartPage() {
               </span>
               <span
                 className="text-xl font-bold text-black font-mono"
-                style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: "20px" }}
+                style={{ fontFamily: "'Ubuntu', sans-serif", fontSize: "20px" }}
               >
                 {formatCurrency(selectedSubtotal)}
               </span>
@@ -235,7 +235,7 @@ export default function CartPage() {
             disabled={noneSelected}
             className="w-full bg-black hover:bg-neutral-800 disabled:bg-neutral-300 disabled:cursor-not-allowed text-white font-normal py-3 rounded-xl flex items-center justify-center gap-2 cursor-pointer shadow-xs transition-all"
             style={{
-              fontFamily: "'Barlow Condensed', sans-serif",
+              fontFamily: "'Ubuntu', sans-serif",
               fontSize: "15px",
               letterSpacing: "0.5px",
             }}

@@ -96,7 +96,7 @@ export default function AdminReceiptOcrPage() {
           </div>
           <p
             className="text-neutral-500 text-xs mt-0.5 font-normal"
-            style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
+            style={{ fontFamily: "'Ubuntu', sans-serif" }}
           >
             Autonomous extraction of transaction references, amounts, and recipient verification for Philippine e-wallets & banks.
           </p>
@@ -120,7 +120,7 @@ export default function AdminReceiptOcrPage() {
           <ShieldCheck size={14} className="text-emerald-600" />
           <span>Verification Rules & Expected Thresholds</span>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 pt-3 text-xs" style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: "14px" }}>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 pt-3 text-xs" style={{ fontFamily: "'Ubuntu', sans-serif", fontSize: "14px" }}>
           <div>
             <label className="text-neutral-500 uppercase block mb-1 text-[11px]">Expected Target Amount (PHP)</label>
             <input
@@ -213,7 +213,7 @@ export default function AdminReceiptOcrPage() {
                   type="button"
                   onClick={() => handleLoadSample(sample)}
                   className="w-full flex items-center justify-between p-2.5 rounded-xl border border-neutral-200 hover:border-black hover:bg-neutral-50 transition cursor-pointer text-left group"
-                  style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
+                  style={{ fontFamily: "'Ubuntu', sans-serif" }}
                 >
                   <div className="truncate">
                     <span className="font-semibold text-black block text-xs">{sample.name}</span>
@@ -243,7 +243,7 @@ export default function AdminReceiptOcrPage() {
               </div>
 
               {/* Tab Switcher */}
-              <div className="flex items-center bg-neutral-100 rounded-xl p-1 text-xs" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
+              <div className="flex items-center bg-neutral-100 rounded-xl p-1 text-xs" style={{ fontFamily: "'Ubuntu', sans-serif" }}>
                 <button
                   type="button"
                   onClick={() => setActiveTab("visual")}
@@ -267,7 +267,7 @@ export default function AdminReceiptOcrPage() {
 
             {activeReceipt ? (
               activeTab === "visual" ? (
-                <div className="space-y-4 font-normal text-xs" style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: "14px" }}>
+                <div className="space-y-4 font-normal text-xs" style={{ fontFamily: "'Ubuntu', sans-serif", fontSize: "14px" }}>
                   {/* Top Status & Verification Summary */}
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
                     <div className="bg-neutral-50 rounded-xl p-3 border border-neutral-200/70">
@@ -380,7 +380,7 @@ export default function AdminReceiptOcrPage() {
             ) : (
               <div className="p-12 text-center text-neutral-400">
                 <FileSearch size={32} className="mx-auto mb-2 opacity-30" />
-                <p className="text-xs" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
+                <p className="text-xs" style={{ fontFamily: "'Ubuntu', sans-serif" }}>
                   Upload a receipt image or select a sample above to view AI OCR extraction.
                 </p>
               </div>

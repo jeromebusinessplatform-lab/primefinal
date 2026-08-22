@@ -38,7 +38,7 @@ export default function QueueStrip() {
             </span>
             <span
               className="text-amber-600 ml-2 font-normal"
-              style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: "11px" }}
+              style={{ fontFamily: "'Ubuntu', sans-serif", fontSize: "11px" }}
             >
               {isPaused
                 ? "Not accepting new orders right now"
@@ -51,7 +51,7 @@ export default function QueueStrip() {
   }
 
   return (
-    <div className="bg-white w-full overflow-hidden">
+    <div className="bg-white w-full overflow-hidden shadow-[0_2px_4px_-1px_rgba(0,0,0,0.05)]">
       <div className="flex items-stretch">
         {/* Column 1: ON QUEUE */}
         <div className="flex-1 py-1 px-1 text-center bg-white flex flex-col justify-center items-center min-w-0 relative" style={{ height: "45px" }}>

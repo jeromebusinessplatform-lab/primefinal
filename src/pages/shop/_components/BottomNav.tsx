@@ -1,11 +1,23 @@
 import { Link, useLocation } from "react-router-dom";
 import { Store, ShoppingCart, ListOrdered, Bell, User, Headphones } from "lucide-react";
 import { useCart } from "@/context/CartContext.tsx";
+import { motion, useAnimation } from "motion/react";
+import { useEffect } from "react";
 
 export default function BottomNav() {
   const location = useLocation();
-  const { totalItems } = useCart();
+  const { totalItems, pulse } = useCart();
   const path = location.pathname;
+  const controls = useAnimation();
+
+  useEffect(() => {
+    if (pulse > 0) {
+      controls.start({
+        scale: [1, 1.2, 1],
+        transition: { duration: 0.3 }
+      });
+    }
+  }, [pulse, controls]);
 
   const cartBadgeCount = totalItems > 0 ? totalItems : undefined;
 
@@ -25,6 +37,8 @@ export default function BottomNav() {
           const isActive =
             path === href ||
             (href !== "/shop" && path.startsWith(href));
+          
+          const isCart = href === "/shop/cart";
 
           return (
             <Link
@@ -35,17 +49,19 @@ export default function BottomNav() {
               }`}
             >
               <div className="relative flex items-center justify-center">
-                <Icon
-                  size={20.5}
-                  className={`transition-transform duration-150 ${
-                    isActive ? "stroke-[2.5] scale-105 text-black" : "stroke-[1.75] text-neutral-700"
-                  }`}
-                />
+                <motion.div animate={isCart ? controls : {}}>
+                  <Icon
+                    size={20.5}
+                    className={`transition-transform duration-150 ${
+                      isActive ? "stroke-[2.5] scale-105 text-black" : "stroke-[1.75] text-neutral-700"
+                    }`}
+                  />
+                </motion.div>
                 {badge !== undefined && badge > 0 && (
                   <span
                     className="absolute -top-1.5 -right-2.5 bg-[#ef4444] text-white text-[10px] font-black rounded-full h-4 min-w-[16px] px-1 flex items-center justify-center leading-none shadow-xs border border-white"
                     style={{
-                      fontFamily: "'Barlow Condensed', sans-serif",
+                      fontFamily: "'Ubuntu', sans-serif",
                     }}
                   >
                     {badge > 99 ? "99+" : badge}

@@ -18,7 +18,7 @@ export default function AdminDashboardPage() {
       <header className="mb-5">
         <p className="text-[10px] uppercase tracking-[0.22em] text-neutral-400 mb-1">PRIME ADMIN</p>
         <h1 className="text-2xl font-normal tracking-tight text-black">COMMAND CENTER</h1>
-        <p className="text-xs text-neutral-500 mt-1" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
+        <p className="text-xs text-neutral-500 mt-1" style={{ fontFamily: "'Ubuntu', sans-serif" }}>
           Select a system to manage operations.
         </p>
       </header>
@@ -39,7 +39,7 @@ export default function AdminDashboardPage() {
             </div>
             <div>
               <h2 className="text-[13px] sm:text-sm font-semibold tracking-wide text-black">{title}</h2>
-              <p className="text-[10px] sm:text-xs text-neutral-400 mt-0.5 leading-tight" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
+              <p className="text-[10px] sm:text-xs text-neutral-400 mt-0.5 leading-tight" style={{ fontFamily: "'Ubuntu', sans-serif" }}>
                 {description}
               </p>
             </div>

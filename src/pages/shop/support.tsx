@@ -26,7 +26,7 @@ export default function SupportPage() {
         >
           24/7 CUSTOMER SUPPORT
         </h1>
-        <p className="text-xs text-neutral-500 font-normal" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
+        <p className="text-xs text-neutral-500 font-normal" style={{ fontFamily: "'Ubuntu', sans-serif" }}>
           Live Telegram Business Desk
         </p>
       </div>
@@ -44,13 +44,13 @@ export default function SupportPage() {
               >
                 DIRECT DISPATCH & DISPUTES
               </div>
-              <div className="text-xs text-neutral-500 font-normal" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
+              <div className="text-xs text-neutral-500 font-normal" style={{ fontFamily: "'Ubuntu', sans-serif" }}>
                 Average response time: &lt; 2 minutes
               </div>
             </div>
           </div>
 
-          <div className="mt-4 p-3 bg-blue-50/70 border border-blue-100 rounded-xl text-xs text-blue-900 space-y-1 font-normal" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
+          <div className="mt-4 p-3 bg-blue-50/70 border border-blue-100 rounded-xl text-xs text-blue-900 space-y-1 font-normal" style={{ fontFamily: "'Ubuntu', sans-serif" }}>
             <div className="font-normal flex items-center gap-1.5" style={{ fontFamily: "'Roboto Condensed', sans-serif" }}>
               <ShieldCheck size={14} className="text-blue-600" />
               Direct Bot Connection
@@ -61,7 +61,7 @@ export default function SupportPage() {
           </div>
 
           <form onSubmit={handleSubmit} className="mt-4 space-y-2.5">
-            <label className="text-[11px] font-normal text-neutral-700 uppercase" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
+            <label className="text-[11px] font-normal text-neutral-700 uppercase" style={{ fontFamily: "'Ubuntu', sans-serif" }}>
               Send an Instant Inquiry
             </label>
             <textarea
@@ -71,14 +71,14 @@ export default function SupportPage() {
               onChange={(e) => setMessage(e.target.value)}
               placeholder="Describe your question or provide your order number..."
               className="w-full bg-neutral-50 border border-neutral-200 rounded-xl p-3 text-xs text-neutral-800 outline-none focus:border-black resize-none font-normal"
-              style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
+              style={{ fontFamily: "'Ubuntu', sans-serif" }}
             />
             <button
               type="submit"
               disabled={isSending || !message.trim()}
               className="w-full bg-black hover:bg-neutral-800 text-white font-normal py-2.5 rounded-xl flex items-center justify-center gap-2 cursor-pointer shadow-xs disabled:opacity-40 transition-all"
               style={{
-                fontFamily: "'Barlow Condensed', sans-serif",
+                fontFamily: "'Ubuntu', sans-serif",
                 fontSize: "15px",
                 letterSpacing: "0.5px",
               }}
@@ -94,7 +94,7 @@ export default function SupportPage() {
             <MessageSquare size={16} className="text-neutral-600" />
             <span style={{ fontFamily: "'Roboto Condensed', sans-serif" }}>Frequently Asked Questions</span>
           </div>
-          <div className="text-xs space-y-2 text-neutral-600 pt-1 font-normal" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
+          <div className="text-xs space-y-2 text-neutral-600 pt-1 font-normal" style={{ fontFamily: "'Ubuntu', sans-serif" }}>
             <div>
               <div className="font-normal text-neutral-900" style={{ fontFamily: "'Roboto Condensed', sans-serif" }}>
                 How do I track my queue position?

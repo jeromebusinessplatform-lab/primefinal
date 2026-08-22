@@ -44,27 +44,16 @@ export default function ShopHeader() {
   return (
     <header className="bg-white px-3.5 py-2.5 flex items-center justify-between border-b border-neutral-100">
       <div className="flex items-center">
-        <PrimeLogo className="h-7" />
+        <PrimeLogo className="h-6" />
       </div>
       <div className="text-right">
         <div
-          className="text-black font-normal leading-none tracking-tight text-center"
-          style={{
-            fontFamily: "'Roboto Condensed', sans-serif",
-            fontSize: "12px",
-            letterSpacing: "0.2px",
-          }}
+          className="font-sans font-normal text-[10px] leading-[9.5px] text-black text-right"
         >
           {dateStr} | {timeStr}
         </div>
         <div
-          className="font-normal leading-none mt-1 uppercase"
-          style={{
-            fontFamily: "'Barlow Condensed', sans-serif",
-            fontSize: "13px",
-            letterSpacing: "0.5px",
-            color: "#052103",
-          }}
+          className="font-sans text-[9px] font-normal mt-1 uppercase text-right"
         >
           SECURED CUSTOMER ACCESS
         </div>

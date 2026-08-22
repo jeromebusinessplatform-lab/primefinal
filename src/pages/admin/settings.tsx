@@ -34,7 +34,7 @@ export default function AdminSettingsPage() {
         >
           System Configurations
         </h1>
-        <p className="text-neutral-500 text-xs mt-0.5 font-normal" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
+        <p className="text-neutral-500 text-xs mt-0.5 font-normal" style={{ fontFamily: "'Ubuntu', sans-serif" }}>
           Live queue throughput, traffic state overrides, and store availability.
         </p>
       </div>
@@ -49,7 +49,7 @@ export default function AdminSettingsPage() {
             </h2>
           </div>
 
-          <div className="space-y-4 font-normal text-xs" style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: "14px" }}>
+          <div className="space-y-4 font-normal text-xs" style={{ fontFamily: "'Ubuntu', sans-serif", fontSize: "14px" }}>
             <div className="flex items-center justify-between p-3 rounded-xl bg-neutral-50 border border-neutral-200">
               <div>
                 <div className="text-sm font-medium text-black">Pause Incoming Queue</div>
@@ -125,7 +125,7 @@ export default function AdminSettingsPage() {
             </h2>
           </div>
 
-          <div className="space-y-2 text-xs text-neutral-600 font-normal" style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: "13px" }}>
+          <div className="space-y-2 text-xs text-neutral-600 font-normal" style={{ fontFamily: "'Ubuntu', sans-serif", fontSize: "13px" }}>
             <div className="flex justify-between py-1.5 border-b border-neutral-100">
               <span>Admin Access Passcode:</span>
               <span className="font-mono text-black font-semibold">{APP_CONFIG.ADMIN_ACCESS_CODE}</span>
@@ -144,7 +144,7 @@ export default function AdminSettingsPage() {
         <button
           type="submit"
           className="bg-black hover:bg-neutral-800 text-white font-normal py-3 px-6 rounded-xl flex items-center justify-center gap-2 cursor-pointer shadow-xs transition-all"
-          style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: "16px" }}
+          style={{ fontFamily: "'Ubuntu', sans-serif", fontSize: "16px" }}
         >
           <Save size={16} /> Save All Configurations
         </button>

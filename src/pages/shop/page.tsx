@@ -157,7 +157,7 @@ function ProductCard({ product, allProducts }: { product: Product; allProducts?:
             <p
               className="text-neutral-500 leading-tight mt-0.5 line-clamp-1 font-normal"
               style={{
-                fontFamily: "'Barlow Condensed', sans-serif",
+                fontFamily: "'Ubuntu', sans-serif",
                 fontSize: "12px",
               }}
             >
@@ -200,7 +200,7 @@ function ProductCard({ product, allProducts }: { product: Product; allProducts?:
             <span
               className="text-black font-normal"
               style={{
-                fontFamily: "'Barlow Condensed', sans-serif",
+                fontFamily: "'Ubuntu', sans-serif",
                 fontSize: "17px",
               }}
             >
@@ -210,7 +210,7 @@ function ProductCard({ product, allProducts }: { product: Product; allProducts?:
               <span
                 className="text-[#ef4444] font-normal line-through"
                 style={{
-                  fontFamily: "'Barlow Condensed', sans-serif",
+                  fontFamily: "'Ubuntu', sans-serif",
                   fontSize: "11px",
                 }}
               >
@@ -246,7 +246,7 @@ function ProductCard({ product, allProducts }: { product: Product; allProducts?:
               <span
                 className="font-normal text-black px-2 text-center"
                 style={{
-                  fontFamily: "'Barlow Condensed', sans-serif",
+                  fontFamily: "'Ubuntu', sans-serif",
                   fontSize: "14px",
                 }}
               >
@@ -376,7 +376,7 @@ function ProductCard({ product, allProducts }: { product: Product; allProducts?:
                   setShowBundleDrawer(false);
                 }}
                 className="bg-amber-400 hover:bg-amber-300 text-black font-semibold text-xs px-4 py-2 rounded-xl cursor-pointer shadow-md transition-colors"
-                style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
+                style={{ fontFamily: "'Ubuntu', sans-serif" }}
               >
                 Add Complete Bundle to Cart
               </button>
@@ -418,7 +418,7 @@ function ProductCard({ product, allProducts }: { product: Product; allProducts?:
 
             <div className="overflow-y-auto space-y-2.5 flex-1 pr-1">
               {reviews.length === 0 ? (
-                <div className="p-6 text-center text-neutral-400 text-xs font-normal" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
+                <div className="p-6 text-center text-neutral-400 text-xs font-normal" style={{ fontFamily: "'Ubuntu', sans-serif" }}>
                   No customer comments yet for this item. Place an order to be the first to review!
                 </div>
               ) : (
@@ -431,7 +431,7 @@ function ProductCard({ product, allProducts }: { product: Product; allProducts?:
                       </span>
                     </div>
                     <StarRating rating={rev.rating} size={11} />
-                    <p className="text-xs text-neutral-700 italic" style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: "13px" }}>
+                    <p className="text-xs text-neutral-700 italic" style={{ fontFamily: "'Ubuntu', sans-serif", fontSize: "13px" }}>
                       "{rev.comment}"
                     </p>
                     {rev.tags && rev.tags.length > 0 && (
@@ -537,7 +537,7 @@ export default function ShopCatalog() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full bg-transparent text-xs text-neutral-800 placeholder-neutral-400 outline-none font-normal"
-              style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
+              style={{ fontFamily: "'Ubuntu', sans-serif" }}
             />
           </div>
 
@@ -549,7 +549,7 @@ export default function ShopCatalog() {
                 setShowFilterMenu(false);
               }}
               className="flex items-center justify-between gap-1.5 bg-white border border-neutral-200/90 rounded-xl px-2.5 py-1.5 text-xs font-normal text-neutral-800 cursor-pointer shadow-2xs hover:bg-neutral-50 min-w-[105px]"
-              style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
+              style={{ fontFamily: "'Ubuntu', sans-serif" }}
             >
               <span className="truncate max-w-[85px]">{activeCategory}</span>
               <ChevronDown size={14} className="text-neutral-500 flex-shrink-0" />
@@ -567,7 +567,7 @@ export default function ShopCatalog() {
                     className={`w-full text-left px-3 py-2 text-xs flex items-center justify-between cursor-pointer hover:bg-neutral-50 font-normal ${
                       activeCategory === cat ? "text-black bg-neutral-50 font-semibold" : "text-neutral-700"
                     }`}
-                    style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
+                    style={{ fontFamily: "'Ubuntu', sans-serif" }}
                   >
                     <span>{cat}</span>
                     {activeCategory === cat && <Check size={12} className="text-black" />}
@@ -585,7 +585,7 @@ export default function ShopCatalog() {
                 setShowCategoryMenu(false);
               }}
               className="flex items-center justify-between gap-1.5 bg-white border border-neutral-200/90 rounded-xl px-2.5 py-1.5 text-xs font-normal text-neutral-800 cursor-pointer shadow-2xs hover:bg-neutral-50 min-w-[95px]"
-              style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
+              style={{ fontFamily: "'Ubuntu', sans-serif" }}
             >
               <span className="truncate max-w-[75px]">
                 {activeFilter === "all" ? "All Filters" : FILTER_LABELS[activeFilter]}
@@ -605,7 +605,7 @@ export default function ShopCatalog() {
                     className={`w-full text-left px-3 py-2 text-xs flex items-center justify-between cursor-pointer hover:bg-neutral-50 font-normal ${
                       activeFilter === key ? "text-black bg-neutral-50 font-semibold" : "text-neutral-700"
                     }`}
-                    style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
+                    style={{ fontFamily: "'Ubuntu', sans-serif" }}
                   >
                     <span>{FILTER_LABELS[key]}</span>
                     {activeFilter === key && <Check size={12} className="text-black" />}
@@ -635,7 +635,7 @@ export default function ShopCatalog() {
         ) : filtered.length === 0 ? (
           <div className="text-center py-16 text-neutral-400 bg-white rounded-2xl border border-neutral-200 p-8 my-4">
             <ShoppingCart size={40} className="mx-auto mb-2 opacity-30" />
-            <p className="text-sm font-normal text-neutral-700" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
+            <p className="text-sm font-normal text-neutral-700" style={{ fontFamily: "'Ubuntu', sans-serif" }}>
               No products match your criteria
             </p>
             {(search || activeCategory !== "All Categories" || activeFilter !== "all") && (
@@ -646,7 +646,7 @@ export default function ShopCatalog() {
                   setActiveFilter("all");
                 }}
                 className="mt-3 text-xs bg-black text-white font-normal px-4 py-2 rounded-xl cursor-pointer hover:bg-neutral-800"
-                style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
+                style={{ fontFamily: "'Ubuntu', sans-serif" }}
               >
                 Reset all filters
               </button>

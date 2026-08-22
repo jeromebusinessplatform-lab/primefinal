@@ -25,7 +25,7 @@ export default function AdminAnalyticsPage() {
           </h1>
           <p
             className="text-xs text-neutral-500 font-normal"
-            style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
+            style={{ fontFamily: "'Ubuntu', sans-serif" }}
           >
             30-Day performance dashboard, daily metrics, and revenue breakdown
           </p>

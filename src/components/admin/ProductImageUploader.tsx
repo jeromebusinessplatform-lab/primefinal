@@ -111,7 +111,7 @@ export function ProductImageUploader({
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
                 className="flex items-center gap-1 text-xs border border-neutral-300 bg-white px-2.5 py-1 rounded-lg hover:bg-neutral-100 text-neutral-700 cursor-pointer shadow-2xs font-normal"
-                style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
+                style={{ fontFamily: "'Ubuntu', sans-serif" }}
               >
                 <RefreshCw size={11} /> Replace
               </button>
@@ -119,7 +119,7 @@ export function ProductImageUploader({
                 type="button"
                 onClick={() => onImageChange(undefined)}
                 className="flex items-center gap-1 text-xs border border-red-200 bg-red-50 px-2.5 py-1 rounded-lg hover:bg-red-100 text-red-600 cursor-pointer font-normal"
-                style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
+                style={{ fontFamily: "'Ubuntu', sans-serif" }}
               >
                 <Trash2 size={11} /> Remove
               </button>

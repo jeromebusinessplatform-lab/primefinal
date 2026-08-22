@@ -85,14 +85,14 @@ export default function OrdersPage() {
           >
             MY ORDERS
           </h1>
-          <p className="text-xs text-neutral-500 font-normal" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
+          <p className="text-xs text-neutral-500 font-normal" style={{ fontFamily: "'Ubuntu', sans-serif" }}>
             Live order queue, fulfillment tracking & product reviews
           </p>
         </div>
         <Link
           to="/shop"
           className="text-xs text-black border border-neutral-200 px-3 py-1.5 rounded-lg hover:bg-neutral-50 font-normal"
-          style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
+          style={{ fontFamily: "'Ubuntu', sans-serif" }}
         >
           Shop More
         </Link>
@@ -122,7 +122,7 @@ export default function OrdersPage() {
           <Link
             to="/shop"
             className="mt-4 text-xs bg-black text-white font-normal px-4 py-2 rounded-xl"
-            style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
+            style={{ fontFamily: "'Ubuntu', sans-serif" }}
           >
             BROWSE PRODUCTS
           </Link>
@@ -146,7 +146,7 @@ export default function OrdersPage() {
                   >
                     <span>#{order.orderNumber}</span>
                   </div>
-                  <div className="text-[11px] text-neutral-400 mt-0.5 font-normal" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
+                  <div className="text-[11px] text-neutral-400 mt-0.5 font-normal" style={{ fontFamily: "'Ubuntu', sans-serif" }}>
                     {new Date(order._creationTime).toLocaleDateString("en-US", {
                       month: "short",
                       day: "numeric",
@@ -181,7 +181,7 @@ export default function OrdersPage() {
 
                     return (
                       <div key={idx} className="pt-2 first:pt-0 space-y-1.5">
-                        <div className="flex justify-between items-start text-xs font-normal" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
+                        <div className="flex justify-between items-start text-xs font-normal" style={{ fontFamily: "'Ubuntu', sans-serif" }}>
                           <div className="pr-2 font-medium text-black">
                             <span className="font-bold text-neutral-800">{it.quantity}x</span> {it.productName}
                           </div>
@@ -202,12 +202,12 @@ export default function OrdersPage() {
                                 type="button"
                                 onClick={() => handleOpenReview(order, it)}
                                 className="text-[11px] text-neutral-600 hover:text-black underline cursor-pointer"
-                                style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
+                                style={{ fontFamily: "'Ubuntu', sans-serif" }}
                               >
                                 Edit Review
                               </button>
                             </div>
-                            <p className="text-xs text-neutral-700 italic line-clamp-2" style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: "13px" }}>
+                            <p className="text-xs text-neutral-700 italic line-clamp-2" style={{ fontFamily: "'Ubuntu', sans-serif", fontSize: "13px" }}>
                               "{review.comment}"
                             </p>
                             {review.tags && review.tags.length > 0 && (
@@ -225,7 +225,7 @@ export default function OrdersPage() {
                           </div>
                         ) : (
                           <div className="flex items-center justify-between bg-neutral-50 rounded-xl px-2.5 py-1.5 border border-neutral-200/70">
-                            <span className="text-[11px] text-neutral-500 flex items-center gap-1" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
+                            <span className="text-[11px] text-neutral-500 flex items-center gap-1" style={{ fontFamily: "'Ubuntu', sans-serif" }}>
                               <Star size={11} className="text-amber-500 fill-amber-400" />
                               Rate this product
                             </span>
@@ -233,7 +233,7 @@ export default function OrdersPage() {
                               type="button"
                               onClick={() => handleOpenReview(order, it)}
                               className="text-[11px] font-medium text-black bg-white hover:bg-neutral-100 border border-neutral-200 px-2.5 py-1 rounded-lg flex items-center gap-1 cursor-pointer transition shadow-2xs"
-                              style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
+                              style={{ fontFamily: "'Ubuntu', sans-serif" }}
                             >
                               <MessageSquare size={11} className="text-neutral-700" />
                               <span>Write Review</span>
@@ -248,19 +248,19 @@ export default function OrdersPage() {
 
               {/* Order total info */}
               <div className="flex items-center justify-between text-sm pt-2 border-t border-neutral-100">
-                <span className="text-xs text-neutral-500 font-normal" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
+                <span className="text-xs text-neutral-500 font-normal" style={{ fontFamily: "'Ubuntu', sans-serif" }}>
                   {order.items.reduce((s, i) => s + i.quantity, 0)} items total
                 </span>
                 <span
                   className="text-black font-semibold font-mono"
-                  style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: "18px" }}
+                  style={{ fontFamily: "'Ubuntu', sans-serif", fontSize: "18px" }}
                 >
                   {formatCurrency(order.total)}
                 </span>
               </div>
 
               {!["DELIVERED", "CANCELLED", "REJECTED"].includes(order.orderStatus) && (
-                <div className="mt-2 pt-2 border-t border-neutral-100 flex items-center justify-between text-xs text-neutral-600 bg-neutral-50/80 -mx-3.5 -mb-3.5 p-2.5 rounded-b-2xl font-normal" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
+                <div className="mt-2 pt-2 border-t border-neutral-100 flex items-center justify-between text-xs text-neutral-600 bg-neutral-50/80 -mx-3.5 -mb-3.5 p-2.5 rounded-b-2xl font-normal" style={{ fontFamily: "'Ubuntu', sans-serif" }}>
                   <div className="flex items-center gap-1.5 font-normal">
                     <Clock size={13} className="text-orange-500" />
                     <span>

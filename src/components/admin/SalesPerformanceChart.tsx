@@ -120,7 +120,7 @@ export function SalesPerformanceChart() {
               </h2>
               <p
                 className="text-xs text-neutral-500 font-normal"
-                style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
+                style={{ fontFamily: "'Ubuntu', sans-serif" }}
               >
                 Daily revenue analytics over the last {timeRange} days
               </p>
@@ -140,7 +140,7 @@ export function SalesPerformanceChart() {
                   ? "bg-white text-black shadow-2xs"
                   : "text-neutral-500 hover:text-black"
               }`}
-              style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
+              style={{ fontFamily: "'Ubuntu', sans-serif" }}
             >
               {r === "30" ? "Last 30 Days" : `${r} Days`}
             </button>
@@ -163,7 +163,7 @@ export function SalesPerformanceChart() {
           </div>
           <div
             className="text-xl font-bold text-neutral-900 font-mono"
-            style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
+            style={{ fontFamily: "'Ubuntu', sans-serif" }}
           >
             {formatCurrency(totalRevenue)}
           </div>
@@ -186,7 +186,7 @@ export function SalesPerformanceChart() {
           </div>
           <div
             className="text-xl font-bold text-neutral-900 font-mono"
-            style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
+            style={{ fontFamily: "'Ubuntu', sans-serif" }}
           >
             {formatCurrency(avgDailyRevenue)}
           </div>
@@ -208,7 +208,7 @@ export function SalesPerformanceChart() {
           </div>
           <div
             className="text-xl font-bold text-neutral-900 font-mono"
-            style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
+            style={{ fontFamily: "'Ubuntu', sans-serif" }}
           >
             {peakDay ? formatCurrency(peakDay.revenue) : "$0"}
           </div>
@@ -230,7 +230,7 @@ export function SalesPerformanceChart() {
           </div>
           <div
             className="text-xl font-bold text-neutral-900 font-mono"
-            style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
+            style={{ fontFamily: "'Ubuntu', sans-serif" }}
           >
             {formatCurrency(avgOrderValue)}
           </div>

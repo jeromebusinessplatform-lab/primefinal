@@ -57,14 +57,14 @@ export default function OrientationLock() {
       </h2>
       <p
         className="text-neutral-400 text-sm max-w-xs leading-relaxed font-normal mb-4"
-        style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: "14px" }}
+        style={{ fontFamily: "'Ubuntu', sans-serif", fontSize: "14px" }}
       >
         PRIME is strictly optimized for portrait mobile display (412 × 915 dp).
         Please rotate your device to portrait mode to continue.
       </p>
       <div
         className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-neutral-800 border border-neutral-700 text-neutral-300 text-xs font-normal"
-        style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
+        style={{ fontFamily: "'Ubuntu', sans-serif" }}
       >
         <span className="w-2 h-2 rounded-full bg-green-500 animate-ping" />
         LOCKED TO 412 × 915 DP PORTRAIT

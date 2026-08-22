@@ -160,7 +160,7 @@ export function ReceiptOcrScanner({
       <div className="flex items-center justify-between">
         <label
           className="text-[11px] font-normal text-neutral-600 uppercase flex items-center gap-1.5"
-          style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
+          style={{ fontFamily: "'Ubuntu', sans-serif" }}
         >
           <Sparkles size={13} className="text-amber-500" />
           <span>{title}</span>
@@ -213,7 +213,7 @@ export function ReceiptOcrScanner({
               </div>
               <p
                 className="text-[11px] text-neutral-500 mt-0.5 font-normal"
-                style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
+                style={{ fontFamily: "'Ubuntu', sans-serif" }}
               >
                 Drag and drop transfer screenshot, take photo, or browse file
               </p>
@@ -241,7 +241,7 @@ export function ReceiptOcrScanner({
                 type="button"
                 onClick={() => handleSelectSample(sample)}
                 className="flex items-center justify-between p-2 rounded-xl bg-white border border-neutral-200 hover:border-black text-left cursor-pointer transition-all hover:shadow-2xs text-xs font-normal group"
-                style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
+                style={{ fontFamily: "'Ubuntu', sans-serif" }}
               >
                 <div className="truncate">
                   <span className="font-semibold text-black block truncate">{sample.channel}</span>
@@ -341,7 +341,7 @@ export function ReceiptOcrScanner({
               <div className="flex-1 space-y-2">
                 {/* Amount with Match Status */}
                 <div className="flex items-center justify-between pb-1.5 border-b border-neutral-100">
-                  <span className="text-xs text-neutral-500 font-normal" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
+                  <span className="text-xs text-neutral-500 font-normal" style={{ fontFamily: "'Ubuntu', sans-serif" }}>
                     Verified Amount:
                   </span>
                   <div className="flex items-center gap-1.5">
@@ -362,7 +362,7 @@ export function ReceiptOcrScanner({
 
                 {/* Reference Number */}
                 <div className="flex items-center justify-between pb-1.5 border-b border-neutral-100">
-                  <span className="text-xs text-neutral-500 font-normal" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
+                  <span className="text-xs text-neutral-500 font-normal" style={{ fontFamily: "'Ubuntu', sans-serif" }}>
                     Reference No:
                   </span>
                   <div className="flex items-center gap-1">
@@ -381,7 +381,7 @@ export function ReceiptOcrScanner({
                 </div>
 
                 {/* Recipient & Sender */}
-                <div className="grid grid-cols-2 gap-2 text-xs font-normal" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
+                <div className="grid grid-cols-2 gap-2 text-xs font-normal" style={{ fontFamily: "'Ubuntu', sans-serif" }}>
                   <div>
                     <span className="text-neutral-400 text-[10px] uppercase block">Paid To:</span>
                     <span className="text-neutral-900 font-medium truncate block" title={ocrResult.receiverName}>
@@ -400,7 +400,7 @@ export function ReceiptOcrScanner({
 
             {/* Validation Notes & Bullet Points */}
             {ocrResult.notes && ocrResult.notes.length > 0 && (
-              <div className="bg-neutral-50 rounded-xl p-2.5 text-[11px] text-neutral-600 space-y-1 border border-neutral-200/60 font-normal" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
+              <div className="bg-neutral-50 rounded-xl p-2.5 text-[11px] text-neutral-600 space-y-1 border border-neutral-200/60 font-normal" style={{ fontFamily: "'Ubuntu', sans-serif" }}>
                 <div className="text-[10px] text-neutral-400 uppercase tracking-wider font-mono flex items-center gap-1">
                   <ShieldCheck size={11} className="text-emerald-600" />
                   <span>OCR Integrity Check</span>

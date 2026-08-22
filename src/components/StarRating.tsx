@@ -67,7 +67,7 @@ export function StarRating({
       {showScore && (
         <span
           className="text-xs font-bold text-neutral-900 ml-0.5 font-mono"
-          style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: "12px" }}
+          style={{ fontFamily: "'Ubuntu', sans-serif", fontSize: "12px" }}
         >
           {rating.toFixed(1)}
         </span>
@@ -76,7 +76,7 @@ export function StarRating({
       {showCount && typeof count === "number" && (
         <span
           className="text-[11px] text-neutral-500 font-normal ml-0.5"
-          style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
+          style={{ fontFamily: "'Ubuntu', sans-serif" }}
         >
           ({count})
         </span>

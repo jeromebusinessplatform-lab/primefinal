@@ -40,7 +40,7 @@ export default function AdminLogin() {
           </div>
           <div
             className="text-neutral-500 text-sm font-medium tracking-[0.24em] uppercase mt-4"
-            style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
+            style={{ fontFamily: "'Ubuntu', sans-serif" }}
           >
             Admin Panel
           </div>
@@ -53,7 +53,7 @@ export default function AdminLogin() {
           <div className="mb-5">
             <label
               className="block text-neutral-500 text-xs font-normal uppercase tracking-wider mb-2 text-center"
-              style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
+              style={{ fontFamily: "'Ubuntu', sans-serif" }}
             >
               Access Code
             </label>
@@ -64,7 +64,7 @@ export default function AdminLogin() {
                 onChange={(e) => setCode(e.target.value)}
                 placeholder="Enter admin access code"
                 className="w-full bg-white border border-neutral-300 text-neutral-900 rounded-xl px-4 py-3 pr-11 text-sm outline-none focus:border-neutral-700 focus:ring-1 focus:ring-neutral-200 placeholder-neutral-400 text-center font-normal"
-                style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
+                style={{ fontFamily: "'Ubuntu', sans-serif" }}
                 autoComplete="off"
               />
               <button
@@ -81,7 +81,7 @@ export default function AdminLogin() {
           {error && (
             <div
               className="mb-4 bg-red-50 border border-red-200 text-red-600 text-sm px-3 py-2 rounded-xl text-center font-normal"
-              style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
+              style={{ fontFamily: "'Ubuntu', sans-serif" }}
             >
               {error}
             </div>
@@ -91,7 +91,7 @@ export default function AdminLogin() {
             type="submit"
             disabled={!code || isLoading}
             className="w-full bg-neutral-900 text-white font-normal py-3 rounded-xl flex items-center justify-center gap-2 cursor-pointer disabled:opacity-40 hover:bg-black transition-colors"
-            style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: "16px" }}
+            style={{ fontFamily: "'Ubuntu', sans-serif", fontSize: "16px" }}
           >
             {isLoading ? <Loader2 size={16} className="animate-spin" /> : null}
             ENTER ADMIN PANEL

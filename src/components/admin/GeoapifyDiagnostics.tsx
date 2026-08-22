@@ -176,7 +176,7 @@ export function GeoapifyDiagnostics() {
               Geoapify Intelligence & Fleet Routing
             </h2>
           </div>
-          <p className="text-xs text-neutral-500 font-normal mt-0.5" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
+          <p className="text-xs text-neutral-500 font-normal mt-0.5" style={{ fontFamily: "'Ubuntu', sans-serif" }}>
             Real-time Address Autocomplete (300ms Debounce), Geocoding, Reverse Lookup, Routing & IP Geolocation.
           </p>
         </div>
@@ -202,7 +202,7 @@ export function GeoapifyDiagnostics() {
       {/* Grid Layout: Autocomplete & Routing + Map Preview */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
         {/* Left Column: Interactive Tools */}
-        <div className="lg:col-span-7 space-y-4 font-normal" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
+        <div className="lg:col-span-7 space-y-4 font-normal" style={{ fontFamily: "'Ubuntu', sans-serif" }}>
           {/* Tool 1: Address Autocomplete */}
           <div className="bg-neutral-50 border border-neutral-200 rounded-xl p-3.5 space-y-2.5">
             <div className="flex items-center justify-between">

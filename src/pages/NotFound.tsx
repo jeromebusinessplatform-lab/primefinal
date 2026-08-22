@@ -13,14 +13,14 @@ export default function NotFound() {
         >
           Page Not Found
         </h2>
-        <p className="text-xs text-neutral-500 font-normal" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
+        <p className="text-xs text-neutral-500 font-normal" style={{ fontFamily: "'Ubuntu', sans-serif" }}>
           The path <code className="bg-neutral-100 px-1 py-0.5 rounded text-neutral-800">{location.pathname}</code> does not exist in PRIME.
         </p>
         <div className="pt-2">
           <Link
             to="/shop"
             className="inline-flex items-center justify-center rounded-md bg-black px-4 py-2 text-sm font-medium text-white shadow hover:bg-neutral-800 transition-colors"
-            style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
+            style={{ fontFamily: "'Ubuntu', sans-serif" }}
           >
             Return to Shop
           </Link>

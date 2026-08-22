@@ -24,7 +24,7 @@ export default function OrderConfirmationPage() {
         </h1>
         <p
           className="text-neutral-500 text-sm mt-1 font-normal"
-          style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
+          style={{ fontFamily: "'Ubuntu', sans-serif" }}
         >
           Your order has been received and is currently in the fulfillment queue.
         </p>
@@ -36,7 +36,7 @@ export default function OrderConfirmationPage() {
           <div>
             <div
               className="text-xs text-neutral-500 uppercase tracking-wide font-normal"
-              style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
+              style={{ fontFamily: "'Ubuntu', sans-serif" }}
             >
               Order Number
             </div>
@@ -57,7 +57,7 @@ export default function OrderConfirmationPage() {
           <div className="w-9 h-9 rounded-full bg-black flex items-center justify-center flex-shrink-0">
             <span
               className="text-white font-normal text-base"
-              style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
+              style={{ fontFamily: "'Ubuntu', sans-serif" }}
             >
               #{state?.queuePosition ?? 6}
             </span>
@@ -65,7 +65,7 @@ export default function OrderConfirmationPage() {
           <div>
             <div
               className="text-xs text-neutral-500 uppercase tracking-wide font-normal"
-              style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
+              style={{ fontFamily: "'Ubuntu', sans-serif" }}
             >
               Queue Position
             </div>
@@ -83,7 +83,7 @@ export default function OrderConfirmationPage() {
           <div>
             <div
               className="text-xs text-neutral-500 uppercase tracking-wide font-normal"
-              style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
+              style={{ fontFamily: "'Ubuntu', sans-serif" }}
             >
               Estimated Wait
             </div>
@@ -106,7 +106,7 @@ export default function OrderConfirmationPage() {
             <div>
               <div
                 className="text-xs text-neutral-500 uppercase tracking-wide font-normal"
-                style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
+                style={{ fontFamily: "'Ubuntu', sans-serif" }}
               >
                 Estimated Dispatch
               </div>
@@ -137,7 +137,7 @@ export default function OrderConfirmationPage() {
       <div className="mt-4 bg-blue-50 border border-blue-200 rounded-xl p-3.5">
         <p
           className="text-xs text-blue-900 leading-relaxed font-normal"
-          style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
+          style={{ fontFamily: "'Ubuntu', sans-serif" }}
         >
           Your payment receipt has been linked for automated verification. You will receive Telegram notifications as your order progresses.
         </p>
@@ -147,14 +147,14 @@ export default function OrderConfirmationPage() {
         <Link
           to="/shop/orders"
           className="block w-full text-center bg-black text-white font-normal py-3 rounded-xl cursor-pointer hover:bg-neutral-800 transition-colors shadow-xs"
-          style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: "15px" }}
+          style={{ fontFamily: "'Ubuntu', sans-serif", fontSize: "15px" }}
         >
           VIEW MY ORDERS
         </Link>
         <Link
           to="/shop"
           className="block w-full text-center bg-white border border-neutral-300 text-neutral-800 font-normal py-3 rounded-xl cursor-pointer hover:bg-neutral-50 transition-colors"
-          style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: "15px" }}
+          style={{ fontFamily: "'Ubuntu', sans-serif", fontSize: "15px" }}
         >
           CONTINUE SHOPPING
         </Link>

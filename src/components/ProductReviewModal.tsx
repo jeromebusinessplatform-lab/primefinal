@@ -123,7 +123,7 @@ export function ProductReviewModal({
               </h3>
               <div
                 className="text-[11px] text-neutral-500 flex items-center gap-1 font-normal"
-                style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
+                style={{ fontFamily: "'Ubuntu', sans-serif" }}
               >
                 <ShieldCheck size={12} className="text-emerald-600" />
                 <span>Verified Purchase • Order #{orderNumber}</span>
@@ -164,7 +164,7 @@ export function ProductReviewModal({
               </h4>
               <p
                 className="text-xs text-neutral-500 mt-0.5"
-                style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
+                style={{ fontFamily: "'Ubuntu', sans-serif" }}
               >
                 Share your feedback to help other shoppers
               </p>
@@ -189,7 +189,7 @@ export function ProductReviewModal({
             </div>
             <p
               className="text-xs font-semibold text-amber-800 font-mono tracking-tight"
-              style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
+              style={{ fontFamily: "'Ubuntu', sans-serif" }}
             >
               {RATING_DESCRIPTIONS[rating] || `${rating} Stars`}
             </p>
@@ -216,7 +216,7 @@ export function ProductReviewModal({
                         ? "bg-black text-white border-black"
                         : "bg-white text-neutral-700 border-neutral-200 hover:border-neutral-400"
                     }`}
-                    style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: "12px" }}
+                    style={{ fontFamily: "'Ubuntu', sans-serif", fontSize: "12px" }}
                   >
                     {tag}
                   </button>
@@ -243,7 +243,7 @@ export function ProductReviewModal({
               placeholder="How was the build quality, performance, and packaging? Would you recommend it?"
               required
               className="w-full bg-white border border-neutral-200 rounded-xl p-3 text-xs text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:border-black transition resize-none"
-              style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: "13px" }}
+              style={{ fontFamily: "'Ubuntu', sans-serif", fontSize: "13px" }}
             />
           </div>
 
@@ -253,7 +253,7 @@ export function ProductReviewModal({
               type="button"
               onClick={onClose}
               className="flex-1 py-2.5 px-4 rounded-xl border border-neutral-200 text-neutral-700 text-xs font-medium hover:bg-neutral-100 transition cursor-pointer"
-              style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
+              style={{ fontFamily: "'Ubuntu', sans-serif" }}
             >
               Cancel
             </button>
@@ -261,7 +261,7 @@ export function ProductReviewModal({
               type="submit"
               disabled={isSubmitting || !comment.trim()}
               className="flex-1 py-2.5 px-4 rounded-xl bg-black hover:bg-neutral-800 text-white text-xs font-medium transition cursor-pointer shadow-xs disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-1.5"
-              style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
+              style={{ fontFamily: "'Ubuntu', sans-serif" }}
             >
               <CheckCircle2 size={14} />
               <span>Submit Review</span>
