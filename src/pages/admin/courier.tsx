@@ -54,30 +54,25 @@ export default function CourierPage() {
   };
 
   const handleAddCourier = async () => {
-    try {
-      if (Object.values(formData).some(val => typeof val === 'number' && val < 0)) {
-          alert("All price/fare fields must be positive numbers.");
-          return;
-      }
-      if (!file || !croppedAreaPixels || !imageSrc) return;
-
-      const croppedBlob = await getCroppedImg(imageSrc, croppedAreaPixels);
-      const storageRef = ref(storage, `couriers/${file.name}`);
-      await uploadBytes(storageRef, croppedBlob);
-      const logoUrl = await getDownloadURL(storageRef);
-      
-      await addCourier({
-        ...formData,
-        logoUrl,
-        isAvailable: true,
-      });
-      setFormData({ name: '', baseFare: 0, baseDistanceKm: 4, perKmCharge: 0, platformFeeEnabled: false, platformFee: 0, nightDifferentialEnabled: false, nightDifferentialFee: 0, surchargeEnabled: false, surchargeFee: 0 });
-      setFile(null);
-      setImageSrc(null);
-    } catch (error) {
-      console.error("Error adding courier:", error);
-      alert("Failed to add courier. Please try again.");
+    if (Object.values(formData).some(val => typeof val === 'number' && val < 0)) {
+        alert("All price/fare fields must be positive numbers.");
+        return;
     }
+    if (!file || !croppedAreaPixels || !imageSrc) return;
+
+    const croppedBlob = await getCroppedImg(imageSrc, croppedAreaPixels);
+    const storageRef = ref(storage, `couriers/${file.name}`);
+    await uploadBytes(storageRef, croppedBlob);
+    const logoUrl = await getDownloadURL(storageRef);
+    
+    await addCourier({
+      ...formData,
+      logoUrl,
+      isAvailable: true,
+    });
+    setFormData({ name: '', baseFare: 0, baseDistanceKm: 4, perKmCharge: 0, platformFeeEnabled: false, platformFee: 0, nightDifferentialEnabled: false, nightDifferentialFee: 0, surchargeEnabled: false, surchargeFee: 0 });
+    setFile(null);
+    setImageSrc(null);
   };
 
   return (
@@ -133,12 +128,12 @@ export default function CourierPage() {
                 <img src={c.logoUrl} alt={c.name} className='w-12 h-12 object-contain'/>
                 <div>
                     <div className='font-bold'>{c.name}</div>
-                    <button onClick={() => updateCourier(c.id, { isAvailable: !c.isAvailable }).catch(e => console.error(e))} className={`text-xs px-2 py-1 rounded ${c.isAvailable ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                    <button onClick={() => updateCourier(c.id, { isAvailable: !c.isAvailable })} className={`text-xs px-2 py-1 rounded ${c.isAvailable ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
                         {c.isAvailable ? 'Available' : 'Unavailable'}
                     </button>
                 </div>
             </div>
-            <button onClick={() => removeCourier(c.id).catch(e => console.error(e))} className="text-red-500">Remove</button>
+            <button onClick={() => removeCourier(c.id)} className="text-red-500">Remove</button>
           </div>
         ))}
       </div>

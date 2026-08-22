@@ -3,66 +3,31 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-    <meta http-equiv="Pragma" content="no-cache" />
-    <meta http-equiv="Expires" content="0" />
     <title>PRIME - E-Commerce</title>
     <meta name="description" content="PRIME Commerce - Premium e-commerce delivery experience." />
+    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,700&family=Roboto+Condensed:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,700&display=swap" rel="stylesheet" crossorigin />
-
-    <!-- Telegram SDK is non-blocking so a Telegram SDK/network problem can never prevent PRIME from mounting. -->
-    <script src="https://telegram.org/js/telegram-web-app.js" defer></script>
+    <!-- Telegram Mini App SDK -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link rel="manifest" href="/manifest.json" />
-
     <script>
-      // PRIME no longer uses a service worker. Remove any legacy registration/cache
-      // left by an older deployment. If Telegram is currently controlled by that
-      // worker, perform one automatic reload after unregistering it.
-      (function () {
-        var reloadKey = "prime-sw-cleanup-v2";
-        if (!("serviceWorker" in navigator)) return;
-        navigator.serviceWorker.getRegistrations().then(function (registrations) {
-          var hadController = !!navigator.serviceWorker.controller;
-          return Promise.all(registrations.map(function (registration) {
-            return registration.unregister();
-          })).then(function () {
-            if ("caches" in window) {
-              return caches.keys().then(function (keys) {
-                return Promise.all(keys.map(function (key) { return caches.delete(key); }));
-              });
-            }
-          }).then(function () {
-            if (hadController && !sessionStorage.getItem(reloadKey)) {
-              sessionStorage.setItem(reloadKey, "1");
-              window.location.reload();
-            }
-          });
-        }).catch(function () {});
-      })();
-
-      // Never leave Telegram users staring at a completely blank document if a
-      // JavaScript/module error occurs before React mounts. This also makes the
-      // underlying deployment error visible instead of hiding it behind white space.
-      window.addEventListener("error", function (event) {
-        var root = document.getElementById("root");
-        if (root && !root.hasChildNodes()) {
-          root.innerHTML = '<div style="min-height:100dvh;background:#f3f4f6;display:flex;align-items:center;justify-content:center;padding:24px;font-family:Segoe UI,Arial,sans-serif;color:#111827;text-align:center"><div><div style="font-size:30px;letter-spacing:.08em;margin-bottom:12px">PRIME</div><div style="font-size:14px;color:#6b7280">Unable to load PRIME. Please use Reload Page.</div></div></div>';
+      // Disable the old cache-first service worker. A stale cached index.html can
+      // reference a previous Vite bundle and leave the Mini App on a blank screen
+      // after a deployment. Clear legacy registrations/caches before the app loads.
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then((registrations) => {
+          registrations.forEach((registration) => registration.unregister());
+        }).catch(() => {});
+        if ('caches' in window) {
+          caches.keys().then((keys) => Promise.all(keys.map((key) => caches.delete(key)))).catch(() => {});
         }
-        console.error("PRIME boot error", event.error || event.message);
-      });
-      window.addEventListener("unhandledrejection", function (event) {
-        console.error("PRIME unhandled rejection", event.reason);
-      });
+      }
     </script>
   </head>
   <body>
-    <div id="root">
-      <div style="min-height:100dvh;background:#f3f4f6;display:flex;align-items:center;justify-content:center;font-family:Segoe UI,Arial,sans-serif;color:#111827">
-        <div style="text-align:center"><div style="font-size:30px;letter-spacing:.08em">PRIME</div><div style="margin-top:8px;font-size:12px;color:#9ca3af">LOADING</div></div>
-      </div>
-    </div>
-    <script type="module" src="/src/main.tsx?v=20260822-telegram-boot"></script>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

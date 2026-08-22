@@ -157,16 +157,14 @@ export default function AdminProductsPage() {
     };
 
     if (editingProduct) {
-      updateProduct(editingProduct._id, payload)
-        .then(() => toast.success(`Updated "${formData.name}"`))
-        .catch(e => toast.error(e.message));
+      updateProduct(editingProduct._id, payload);
+      toast.success(`Updated "${formData.name}"`);
     } else {
       addProduct({
         ...payload,
         sortOrder: products.length + 1,
-      })
-        .then(() => toast.success(`Added new product "${formData.name}"`))
-        .catch(e => toast.error(e.message));
+      });
+      toast.success(`Added new product "${formData.name}"`);
     }
 
     setShowForm(false);
@@ -174,9 +172,8 @@ export default function AdminProductsPage() {
 
   const handleDelete = (id: string, name: string) => {
     if (window.confirm(`Are you sure you want to remove "${name}" from the catalog?`)) {
-      removeProduct(id)
-        .then(() => toast.success(`Removed product "${name}"`))
-        .catch(e => toast.error(e.message));
+      removeProduct(id);
+      toast.success(`Removed product "${name}"`);
     }
   };
 
@@ -274,35 +271,20 @@ export default function AdminProductsPage() {
         onClose={() => setShowCategoryModal(false)}
         categories={categories}
         productCounts={productCountsByCategory}
-        onAddCategory={async (name) => {
-          try {
-            const success = await addCategory(name);
-            if (success) toast.success(`Added category "${name}"`);
-            return success;
-          } catch (e: any) {
-            toast.error(e.message);
-            return false;
-          }
+        onAddCategory={(name) => {
+          const success = addCategory(name);
+          if (success) toast.success(`Added category "${name}"`);
+          return success;
         }}
-        onEditCategory={async (oldName, newName) => {
-          try {
-            const success = await editCategory(oldName, newName);
-            if (success) toast.success(`Renamed category to "${newName}"`);
-            return success;
-          } catch (e: any) {
-            toast.error(e.message);
-            return false;
-          }
+        onEditCategory={(oldName, newName) => {
+          const success = editCategory(oldName, newName);
+          if (success) toast.success(`Renamed category to "${newName}"`);
+          return success;
         }}
-        onRemoveCategory={async (name) => {
-          try {
-            const success = await removeCategory(name);
-            if (success) toast.success(`Deleted category "${name}"`);
-            return success;
-          } catch (e: any) {
-            toast.error(e.message);
-            return false;
-          }
+        onRemoveCategory={(name) => {
+          const success = removeCategory(name);
+          if (success) toast.success(`Deleted category "${name}"`);
+          return success;
         }}
       />
 

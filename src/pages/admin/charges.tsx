@@ -33,24 +33,16 @@ export default function AdminChargesPage() {
   };
 
   const toggle = async (charge: Charge) => {
-    try {
-      const response = await fetch(`/api/admin/charges/${charge.id}`, { method: "PATCH", credentials: "same-origin", headers: { "Content-Type": "application/json" }, body: JSON.stringify(charge.active ? { ...charge, active: false } : { ...charge, active: true }) });
-      if (!response.ok) { toast.error("Unable to update charge."); return; }
-      await load();
-    } catch (e: any) {
-      toast.error(e.message || "Unable to update charge.");
-    }
+    const response = await fetch(`/api/admin/charges/${charge.id}`, { method: "PATCH", credentials: "same-origin", headers: { "Content-Type": "application/json" }, body: JSON.stringify(charge.active ? { ...charge, active: false } : { ...charge, active: true }) });
+    if (!response.ok) { toast.error("Unable to update charge."); return; }
+    await load();
   };
 
   const remove = async (charge: Charge) => {
-    try {
-      if (!window.confirm(`Delete ${charge.name}?`)) return;
-      const response = await fetch(`/api/admin/charges/${charge.id}`, { method: "DELETE", credentials: "same-origin" });
-      if (!response.ok) { toast.error("Unable to delete charge."); return; }
-      await load();
-    } catch (e: any) {
-      toast.error(e.message || "Unable to delete charge.");
-    }
+    if (!window.confirm(`Delete ${charge.name}?`)) return;
+    const response = await fetch(`/api/admin/charges/${charge.id}`, { method: "DELETE", credentials: "same-origin" });
+    if (!response.ok) { toast.error("Unable to delete charge."); return; }
+    await load();
   };
 
   return <section className="p-3 sm:p-5 max-w-3xl mx-auto" style={{ fontFamily: "'Roboto Condensed', sans-serif" }}>
