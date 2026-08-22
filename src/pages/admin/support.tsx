@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import type { FormEvent } from "react";
 import { Headphones, Plus, Settings2, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -18,7 +19,7 @@ export default function AdminSupportPage() {
   }, []);
 
   const persist = (next: Ticket[]) => { setTickets(next); localStorage.setItem(STORAGE_KEY, JSON.stringify(next)); };
-  const createTicket = (event: React.FormEvent) => {
+  const createTicket = (event: FormEvent) => {
     event.preventDefault();
     if (!subject.trim()) { toast.error("Enter a support subject"); return; }
     const ticket: Ticket = { id: `SUP-${String(Date.now()).slice(-6)}`, subject: subject.trim(), priority, status: "OPEN", createdAt: new Date().toISOString() };
