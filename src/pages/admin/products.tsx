@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from "react";
 import { useProducts } from "@/hooks/useProducts.ts";
+import { ProductListSkeleton } from "@/components/admin/ProductListSkeleton.tsx";
 import {
   Package,
   Plus,
@@ -30,6 +31,7 @@ export default function AdminProductsPage() {
   const {
     products,
     categories,
+    loading,
     addProduct,
     updateProduct,
     removeProduct,
@@ -563,20 +565,30 @@ export default function AdminProductsPage() {
 
       {/* Products Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredProducts.map((product) => {
-          const isBadgeCurrentlyActive = isBadgeActive(product.badge, product.badgeExpiry);
-          const hasCosting = typeof product.costing === "number" && product.costing > 0;
-          const currentPrice = product.salePrice ?? product.price;
-          const profit = hasCosting ? currentPrice - (product.costing ?? 0) : null;
-          const margin = hasCosting && currentPrice > 0 ? Math.round(((profit ?? 0) / currentPrice) * 100) : null;
+        {loading ? (
+          <ProductListSkeleton count={6} />
+        ) : filteredProducts.length === 0 ? (
+          <div className="col-span-full bg-white border border-neutral-200 rounded-2xl p-12 text-center text-neutral-400">
+            <Package size={40} className="mx-auto mb-2 opacity-30" />
+            <p className="text-sm font-normal" style={{ fontFamily: "'Roboto Condensed', sans-serif" }}>
+              No products match the selected filters
+            </p>
+          </div>
+        ) : (
+          filteredProducts.map((product) => {
+            const isBadgeCurrentlyActive = isBadgeActive(product.badge, product.badgeExpiry);
+            const hasCosting = typeof product.costing === "number" && product.costing > 0;
+            const currentPrice = product.salePrice ?? product.price;
+            const profit = hasCosting ? currentPrice - (product.costing ?? 0) : null;
+            const margin = hasCosting && currentPrice > 0 ? Math.round(((profit ?? 0) / currentPrice) * 100) : null;
 
-          return (
-            <div
-              key={product._id}
-              className={`bg-white border rounded-2xl p-4 shadow-2xs flex flex-col justify-between transition-all ${
-                product.isCombination ? "border-amber-300/80 ring-1 ring-amber-200/50" : "border-neutral-200"
-              }`}
-            >
+            return (
+              <div
+                key={product._id}
+                className={`bg-white border rounded-2xl p-4 shadow-2xs flex flex-col justify-between transition-all ${
+                  product.isCombination ? "border-amber-300/80 ring-1 ring-amber-200/50" : "border-neutral-200"
+                }`}
+              >
               <div className="space-y-3">
                 <div className="flex items-start gap-3">
                   {/* Thumbnail */}
@@ -725,9 +737,10 @@ export default function AdminProductsPage() {
                   <Trash2 size={13} /> Remove
                 </button>
               </div>
-            </div>
-          );
-        })}
+              </div>
+            );
+          })
+        )}
       </div>
     </div>
   );

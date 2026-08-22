@@ -1,3 +1,4 @@
+import { OrderListSkeleton } from "@/components/admin/OrderSkeleton.tsx";
 import { useState, useMemo } from "react";
 import {
   Search,
@@ -64,7 +65,7 @@ const STATUS_COLORS: Record<OrderStatus, string> = {
 };
 
 export default function AdminOrdersPage() {
-  const { allOrders: orders, updateOrderStatus, updateOrderOcr, updateOrderPaymentStatus, deleteOrder } = useOrders();
+  const { allOrders: orders, updateOrderStatus, updateOrderOcr, updateOrderPaymentStatus, deleteOrder, loading } = useOrders();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
   const [selectedOrder, setSelectedOrder] = useState<CustomerOrder | null>(null);
@@ -72,6 +73,7 @@ export default function AdminOrdersPage() {
   const [copiedRef, setCopiedRef] = useState(false);
   const [showSalesAnalytics, setShowSalesAnalytics] = useState(true);
 
+  // ... (existing useMemo for filteredOrders) ...
   const filteredOrders = useMemo(() => {
     return orders.filter((o) => {
       const matchSearch =
@@ -84,6 +86,10 @@ export default function AdminOrdersPage() {
       return matchSearch && matchStatus;
     });
   }, [orders, search, statusFilter]);
+
+
+
+
 
   const handleUpdateStatus = (orderId: string, newStatus: OrderStatus) => {
     updateOrderStatus(orderId, newStatus);
@@ -253,7 +259,9 @@ export default function AdminOrdersPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-3">
-          {filteredOrders.length === 0 ? (
+          {loading ? (
+            <OrderListSkeleton />
+          ) : filteredOrders.length === 0 ? (
             <div className="bg-white border border-neutral-200 rounded-2xl p-12 text-center text-neutral-400">
               <Package size={40} className="mx-auto mb-2 opacity-30" />
               <p className="text-sm font-normal" style={{ fontFamily: "'Roboto Condensed', sans-serif" }}>

@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { useCustomers } from '@/hooks/useCustomers';
 import { Search } from 'lucide-react';
+import { CustomerTableSkeleton } from '@/components/admin/CustomerTableSkeleton.tsx';
 
 export default function AdminCustomersPage() {
-    const { customers } = useCustomers();
+    const { customers, loading } = useCustomers();
     const [searchTerm, setSearchTerm] = useState('');
 
     const filteredCustomers = customers.filter(c => 
@@ -27,30 +28,34 @@ export default function AdminCustomersPage() {
                 />
             </div>
 
-            <div className="bg-white rounded shadow overflow-x-auto">
-                <table className="w-full text-sm">
-                    <thead>
-                        <tr className="border-b">
-                            <th className="p-3 text-left">Name</th>
-                            <th className="p-3 text-left">Member ID</th>
-                            <th className="p-3 text-left">VIP Tier</th>
-                            <th className="p-3 text-left">Orders</th>
-                            <th className="p-3 text-left">Total Spent</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {filteredCustomers.map(c => (
-                            <tr key={c.id} className="border-b hover:bg-gray-50">
-                                <td className="p-3">{c.telegramDisplayName}</td>
-                                <td className="p-3">{c.primeMemberId}</td>
-                                <td className="p-3">{c.vipTier}</td>
-                                <td className="p-3">{c.orderCount}</td>
-                                <td className="p-3">₱{c.totalSpending.toFixed(2)}</td>
+            {loading ? (
+                <CustomerTableSkeleton rowCount={8} />
+            ) : (
+                <div className="bg-white rounded shadow overflow-x-auto">
+                    <table className="w-full text-sm">
+                        <thead>
+                            <tr className="border-b">
+                                <th className="p-3 text-left">Name</th>
+                                <th className="p-3 text-left">Member ID</th>
+                                <th className="p-3 text-left">VIP Tier</th>
+                                <th className="p-3 text-left">Orders</th>
+                                <th className="p-3 text-left">Total Spent</th>
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
+                        </thead>
+                        <tbody>
+                            {filteredCustomers.map(c => (
+                                <tr key={c.id} className="border-b hover:bg-gray-50">
+                                    <td className="p-3">{c.telegramDisplayName}</td>
+                                    <td className="p-3">{c.primeMemberId}</td>
+                                    <td className="p-3">{c.vipTier}</td>
+                                    <td className="p-3">{c.orderCount}</td>
+                                    <td className="p-3">₱{c.totalSpending.toFixed(2)}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            )}
         </div>
     );
 }
