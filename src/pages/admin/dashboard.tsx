@@ -14,7 +14,7 @@ export default function AdminDashboardPage() {
   const navigate = useNavigate();
 
   return (
-    <section className="p-3 sm:p-5 max-w-5xl mx-auto" style={{ fontFamily: "'Roboto Condensed', sans-serif" }}>
+    <section className="w-full p-3 sm:p-5" style={{ fontFamily: "'Roboto Condensed', sans-serif" }}>
       <header className="mb-5">
         <p className="text-[10px] uppercase tracking-[0.22em] text-neutral-400 mb-1">PRIME ADMIN</p>
         <h1 className="text-2xl font-normal tracking-tight text-black">COMMAND CENTER</h1>
@@ -23,23 +23,23 @@ export default function AdminDashboardPage() {
         </p>
       </header>
 
-      <div className="grid grid-cols-3 gap-2 sm:gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-x-5 gap-y-3 border-y border-neutral-200 py-2">
         {modules.map(({ title, description, icon: Icon, to }) => (
           <button
             key={title}
             type="button"
             onClick={() => navigate(to)}
-            className="group aspect-square min-h-[112px] bg-white border border-neutral-200 rounded-xl p-3 text-left flex flex-col justify-between hover:border-black hover:shadow-sm active:scale-[0.98] transition-all cursor-pointer"
+            className="group min-w-0 py-3 px-1 text-left flex items-center gap-3 border-b sm:border-b-0 border-neutral-100 hover:bg-neutral-50 active:bg-neutral-100 transition-colors cursor-pointer"
           >
-            <div className="flex items-start justify-between">
-              <div className="w-8 h-8 rounded-lg bg-neutral-100 border border-neutral-200 flex items-center justify-center group-hover:bg-black group-hover:text-white transition-colors">
-                <Icon size={16} strokeWidth={1.8} />
-              </div>
-              <ArrowUpRight size={14} className="text-neutral-300 group-hover:text-black" />
+            <div className="shrink-0 text-neutral-500 group-hover:text-black transition-colors">
+              <Icon size={19} strokeWidth={1.7} />
             </div>
-            <div>
-              <h2 className="text-[13px] sm:text-sm font-semibold tracking-wide text-black">{title}</h2>
-              <p className="text-[10px] sm:text-xs text-neutral-400 mt-0.5 leading-tight" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-1">
+                <h2 className="text-[13px] sm:text-sm font-semibold tracking-wide text-black truncate">{title}</h2>
+                <ArrowUpRight size={12} className="shrink-0 text-neutral-300 group-hover:text-black" />
+              </div>
+              <p className="text-[10px] sm:text-xs text-neutral-400 mt-0.5 leading-tight truncate" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
                 {description}
               </p>
             </div>
