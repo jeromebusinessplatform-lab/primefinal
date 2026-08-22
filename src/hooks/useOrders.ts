@@ -1,13 +1,32 @@
 import { useState, useEffect, useCallback } from "react";
-import { collection, onSnapshot, query, orderBy, updateDoc, deleteDoc, doc, writeBatch, serverTimestamp, Timestamp, increment } from "firebase/firestore";
+import {
+  collection,
+  onSnapshot,
+  query,
+  orderBy,
+  runTransaction,
+  updateDoc,
+  deleteDoc,
+  doc,
+  Timestamp,
+} from "firebase/firestore";
 import { db } from "@/lib/firebase.ts";
 import type { ReceiptOcrResult } from "@/types/ocr.ts";
 
-export type OrderStatus = "REVIEW" | "PAYMENT_CONFIRMED" | "START_PACKING" | "READY" | "AWAITING_RIDER" | "DISPATCHED" | "DELIVERED" | "PAYMENT_FAILED" | "HOLD_ORDER" | "REQUEST_RESUBMIT" | "PAYMENT_CLEARED" | "FINAL_FOLLOW_UP" | "REJECTED" | "CANCELLED";
+export type OrderStatus =
+  | "REVIEW" | "PAYMENT_CONFIRMED" | "START_PACKING" | "READY" | "AWAITING_RIDER"
+  | "DISPATCHED" | "DELIVERED" | "PAYMENT_FAILED" | "HOLD_ORDER"
+  | "REQUEST_RESUBMIT" | "PAYMENT_CLEARED" | "FINAL_FOLLOW_UP" | "REJECTED" | "CANCELLED";
 export type PaymentStatus = "PENDING" | "CONFIRMED" | "FAILED" | "CLEARED";
 export type DeliveryPaymentOption = "PAY_AT_CHECKOUT" | "PAY_UPON_FULFILLMENT";
 
-export interface OrderItem { productId: string; productName: string; quantity: number; unitPrice: number; subtotal: number; }
+export interface OrderItem {
+  productId: string;
+  productName: string;
+  quantity: number;
+  unitPrice: number;
+  subtotal: number;
+}
 
 export interface CustomerOrder {
   _id: string; orderNumber: string; _creationTime: number;
@@ -24,16 +43,17 @@ export interface CustomerOrder {
 type FirestoreOrder = Omit<CustomerOrder, "_id" | "_creationTime"> & { createdAt?: Timestamp | null; updatedAt?: Timestamp | null };
 const ORDERS_COLLECTION = "orders";
 const CUSTOMERS_COLLECTION = "customers";
-
-function fromFirestore(id: string, data: FirestoreOrder): CustomerOrder {
-  const createdAt = data.createdAt;
-  return { ...data, _id: id, _creationTime: createdAt instanceof Timestamp ? createdAt.toMillis() : Date.now() };
-}
+const PRODUCTS_COLLECTION = "products";
 
 function makeOrderNumber(): string {
   const now = new Date();
   const pad = (value: number) => String(value).padStart(2, "0");
   return `${pad(now.getDate())}${pad(now.getMonth() + 1)}${String(now.getFullYear()).slice(-2)}${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+}
+
+function fromFirestore(id: string, data: FirestoreOrder): CustomerOrder {
+  const createdAt = data.createdAt;
+  return { ...data, _id: id, _creationTime: createdAt instanceof Timestamp ? createdAt.toMillis() : Date.now() };
 }
 
 export function useOrders(telegramUserId?: string) {
@@ -58,53 +78,88 @@ export function useOrders(telegramUserId?: string) {
     if (!verifiedTelegramUserId || verifiedTelegramUserId === "1085949511") {
       throw new Error("A verified Telegram customer identity is required before placing an order.");
     }
+    if (!orderData.items.length) throw new Error("Cannot place an order without items.");
 
-    const batch = writeBatch(db);
-    const orderRef = doc(collection(db, ORDERS_COLLECTION));
-    const now = serverTimestamp();
-    const normalizedPaymentStatus: PaymentStatus = "PENDING";
-    const normalizedOrderStatus: OrderStatus = "REVIEW";
     const normalizedOrderNumber = /^\d{12}$/.test(orderData.orderNumber) ? orderData.orderNumber : makeOrderNumber();
+    const orderRef = doc(collection(db, ORDERS_COLLECTION));
+    const customerRef = doc(db, CUSTOMERS_COLLECTION, verifiedTelegramUserId);
+    const productRefs = orderData.items.map((item) => ({ item, ref: doc(db, PRODUCTS_COLLECTION, item.productId) }));
 
-    batch.set(orderRef, {
-      ...orderData,
-      telegramUserId: verifiedTelegramUserId,
-      orderNumber: normalizedOrderNumber,
-      paymentStatus: normalizedPaymentStatus,
-      orderStatus: normalizedOrderStatus,
-      createdAt: now,
-      updatedAt: now,
+    await runTransaction(db, async (transaction) => {
+      const productSnapshots = [];
+      for (const entry of productRefs) {
+        productSnapshots.push({ entry, snapshot: await transaction.get(entry.ref) });
+      }
+
+      const normalizedItems: OrderItem[] = [];
+      let authoritativeSubtotal = 0;
+
+      for (const { entry, snapshot } of productSnapshots) {
+        if (!snapshot.exists()) throw new Error(`Product ${entry.item.productId} is no longer available.`);
+        const product = snapshot.data() as { name?: string; price?: number; salePrice?: number; bundleCalculatedPrice?: number; stock?: number; available?: boolean };
+        const quantity = Number(entry.item.quantity);
+        const stock = Number(product.stock ?? 0);
+        if (!Number.isInteger(quantity) || quantity <= 0) throw new Error(`Invalid quantity for ${product.name || entry.item.productId}.`);
+        if (product.available === false || stock < quantity) throw new Error(`${product.name || entry.item.productId} does not have enough stock.`);
+
+        const authoritativeUnitPrice = Number(product.bundleCalculatedPrice ?? product.salePrice ?? product.price ?? 0);
+        if (!Number.isFinite(authoritativeUnitPrice) || authoritativeUnitPrice < 0) throw new Error(`Invalid price configuration for ${product.name || entry.item.productId}.`);
+        const subtotal = Math.round(authoritativeUnitPrice * quantity * 100) / 100;
+        authoritativeSubtotal += subtotal;
+        normalizedItems.push({ productId: entry.item.productId, productName: product.name || entry.item.productName, quantity, unitPrice: authoritativeUnitPrice, subtotal });
+        transaction.update(entry.ref, { stock: stock - quantity, updatedAt: Timestamp.now() });
+      }
+
+      authoritativeSubtotal = Math.round(authoritativeSubtotal * 100) / 100;
+      const clientDiscount = Number(orderData.discount || 0);
+      const safeDiscount = Number.isFinite(clientDiscount) ? Math.max(0, Math.min(clientDiscount, authoritativeSubtotal)) : 0;
+      const deliveryFee = Math.max(0, Number(orderData.deliveryFee || 0));
+      const tax = Math.round((authoritativeSubtotal - safeDiscount) * 0.05 * 100) / 100;
+      const authoritativeTotal = Math.round((authoritativeSubtotal - safeDiscount + tax + deliveryFee) * 100) / 100;
+      const now = Timestamp.now();
+
+      transaction.set(orderRef, {
+        ...orderData,
+        telegramUserId: verifiedTelegramUserId,
+        orderNumber: normalizedOrderNumber,
+        items: normalizedItems,
+        subtotal: authoritativeSubtotal,
+        discount: safeDiscount,
+        deliveryFee,
+        total: authoritativeTotal,
+        paymentStatus: "PENDING" as PaymentStatus,
+        orderStatus: "REVIEW" as OrderStatus,
+        createdAt: now,
+        updatedAt: now,
+      });
+
+      transaction.set(customerRef, {
+        id: verifiedTelegramUserId,
+        telegramUserId: verifiedTelegramUserId,
+        telegramDisplayName: orderData.telegramDisplayName || "Unknown",
+        telegramUsername: orderData.telegramUsername || null,
+        primeMemberId: `PC${verifiedTelegramUserId.slice(0, 8).toUpperCase()}`,
+        vipTier: "Bronze",
+        lastOrderAt: now,
+        updatedAt: now,
+      }, { merge: true });
     });
 
-    const customerRef = doc(db, CUSTOMERS_COLLECTION, verifiedTelegramUserId);
-    batch.set(customerRef, {
-      id: verifiedTelegramUserId,
-      telegramUserId: verifiedTelegramUserId,
-      telegramDisplayName: orderData.telegramDisplayName || "Unknown",
-      telegramUsername: orderData.telegramUsername || null,
-      primeMemberId: `PC${verifiedTelegramUserId.slice(0, 8).toUpperCase()}`,
-      vipTier: "Bronze",
-      points: increment(Math.floor(orderData.total * 0.1)),
-      totalSpending: increment(orderData.total),
-      orderCount: increment(1),
-      lastOrderAt: now,
-      memberSince: now,
-      updatedAt: now,
-    }, { merge: true });
-
-    await batch.commit();
-    return { ...orderData, telegramUserId: verifiedTelegramUserId, orderNumber: normalizedOrderNumber, paymentStatus: normalizedPaymentStatus, orderStatus: normalizedOrderStatus, _id: orderRef.id, _creationTime: Date.now() } as CustomerOrder;
+    return { ...orderData, telegramUserId: verifiedTelegramUserId, orderNumber: normalizedOrderNumber, paymentStatus: "PENDING" as PaymentStatus, orderStatus: "REVIEW" as OrderStatus, _id: orderRef.id, _creationTime: Date.now() } as CustomerOrder;
   }, []);
 
   const updateOrderStatus = useCallback(async (orderId: string, newStatus: OrderStatus, notes?: string) => {
-    await updateDoc(doc(db, ORDERS_COLLECTION, orderId), { orderStatus: newStatus, ...(notes !== undefined ? { adminNotes: notes } : {}), updatedAt: serverTimestamp() });
+    await updateDoc(doc(db, ORDERS_COLLECTION, orderId), { orderStatus: newStatus, ...(notes !== undefined ? { adminNotes: notes } : {}), updatedAt: Timestamp.now() });
   }, []);
+
   const updateOrderOcr = useCallback(async (orderId: string, ocrData: ReceiptOcrResult, receiptUrl?: string) => {
-    await updateDoc(doc(db, ORDERS_COLLECTION, orderId), { receiptOcrData: ocrData, ...(receiptUrl ? { receiptUrl } : {}), updatedAt: serverTimestamp() });
+    await updateDoc(doc(db, ORDERS_COLLECTION, orderId), { receiptOcrData: ocrData, ...(receiptUrl ? { receiptUrl } : {}), updatedAt: Timestamp.now() });
   }, []);
+
   const updateOrderPaymentStatus = useCallback(async (orderId: string, paymentStatus: PaymentStatus, orderStatus?: OrderStatus) => {
-    await updateDoc(doc(db, ORDERS_COLLECTION, orderId), { paymentStatus, ...(orderStatus ? { orderStatus } : {}), updatedAt: serverTimestamp() });
+    await updateDoc(doc(db, ORDERS_COLLECTION, orderId), { paymentStatus, ...(orderStatus ? { orderStatus } : {}), updatedAt: Timestamp.now() });
   }, []);
+
   const deleteOrder = useCallback(async (orderId: string) => { await deleteDoc(doc(db, ORDERS_COLLECTION, orderId)); }, []);
 
   const customerFilteredOrders = telegramUserId ? orders.filter((order) => order.telegramUserId === telegramUserId) : orders;
