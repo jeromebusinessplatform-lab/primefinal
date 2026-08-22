@@ -30,6 +30,12 @@ function fromFirestore(id: string, data: FirestoreOrder): CustomerOrder {
   return { ...data, _id: id, _creationTime: createdAt instanceof Timestamp ? createdAt.toMillis() : Date.now() };
 }
 
+function makeOrderNumber(): string {
+  const now = new Date();
+  const pad = (value: number) => String(value).padStart(2, "0");
+  return `${pad(now.getDate())}${pad(now.getMonth() + 1)}${String(now.getFullYear()).slice(-2)}${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+}
+
 export function useOrders(telegramUserId?: string) {
   const [orders, setOrders] = useState<CustomerOrder[]>([]);
   const [loading, setLoading] = useState(true);
@@ -48,22 +54,46 @@ export function useOrders(telegramUserId?: string) {
   }, []);
 
   const createOrder = useCallback(async (orderData: Omit<CustomerOrder, "_id" | "_creationTime">) => {
+    const verifiedTelegramUserId = orderData.telegramUserId?.trim();
+    if (!verifiedTelegramUserId || verifiedTelegramUserId === "1085949511") {
+      throw new Error("A verified Telegram customer identity is required before placing an order.");
+    }
+
     const batch = writeBatch(db);
     const orderRef = doc(collection(db, ORDERS_COLLECTION));
     const now = serverTimestamp();
-    batch.set(orderRef, { ...orderData, createdAt: now, updatedAt: now });
-    if (orderData.telegramUserId) {
-      const customerRef = doc(db, CUSTOMERS_COLLECTION, orderData.telegramUserId);
-      batch.set(customerRef, {
-        id: orderData.telegramUserId, telegramUserId: orderData.telegramUserId,
-        telegramDisplayName: orderData.telegramDisplayName || "Unknown", telegramUsername: orderData.telegramUsername || null,
-        primeMemberId: `PC${orderData.telegramUserId.slice(0, 8).toUpperCase()}`, vipTier: "Bronze",
-        points: increment(Math.floor(orderData.total * 0.1)), totalSpending: increment(orderData.total), orderCount: increment(1),
-        lastOrderAt: now, memberSince: now, updatedAt: now,
-      }, { merge: true });
-    }
+    const normalizedPaymentStatus: PaymentStatus = "PENDING";
+    const normalizedOrderStatus: OrderStatus = "REVIEW";
+    const normalizedOrderNumber = /^\d{12}$/.test(orderData.orderNumber) ? orderData.orderNumber : makeOrderNumber();
+
+    batch.set(orderRef, {
+      ...orderData,
+      telegramUserId: verifiedTelegramUserId,
+      orderNumber: normalizedOrderNumber,
+      paymentStatus: normalizedPaymentStatus,
+      orderStatus: normalizedOrderStatus,
+      createdAt: now,
+      updatedAt: now,
+    });
+
+    const customerRef = doc(db, CUSTOMERS_COLLECTION, verifiedTelegramUserId);
+    batch.set(customerRef, {
+      id: verifiedTelegramUserId,
+      telegramUserId: verifiedTelegramUserId,
+      telegramDisplayName: orderData.telegramDisplayName || "Unknown",
+      telegramUsername: orderData.telegramUsername || null,
+      primeMemberId: `PC${verifiedTelegramUserId.slice(0, 8).toUpperCase()}`,
+      vipTier: "Bronze",
+      points: increment(Math.floor(orderData.total * 0.1)),
+      totalSpending: increment(orderData.total),
+      orderCount: increment(1),
+      lastOrderAt: now,
+      memberSince: now,
+      updatedAt: now,
+    }, { merge: true });
+
     await batch.commit();
-    return { ...orderData, _id: orderRef.id, _creationTime: Date.now() } as CustomerOrder;
+    return { ...orderData, telegramUserId: verifiedTelegramUserId, orderNumber: normalizedOrderNumber, paymentStatus: normalizedPaymentStatus, orderStatus: normalizedOrderStatus, _id: orderRef.id, _creationTime: Date.now() } as CustomerOrder;
   }, []);
 
   const updateOrderStatus = useCallback(async (orderId: string, newStatus: OrderStatus, notes?: string) => {
