@@ -1,13 +1,14 @@
 import { useState, useEffect, useCallback } from "react";
 import { collection, onSnapshot, query, orderBy, updateDoc, deleteDoc, doc, writeBatch, serverTimestamp, Timestamp, increment } from "firebase/firestore";
 import { db } from "@/lib/firebase.ts";
-import { ensureFirebaseSession } from "@/lib/firebaseAuth.ts";
 import type { ReceiptOcrResult } from "@/types/ocr.ts";
 
 export type OrderStatus = "REVIEW" | "PAYMENT_CONFIRMED" | "START_PACKING" | "READY" | "AWAITING_RIDER" | "DISPATCHED" | "DELIVERED" | "PAYMENT_FAILED" | "HOLD_ORDER" | "REQUEST_RESUBMIT" | "PAYMENT_CLEARED" | "FINAL_FOLLOW_UP" | "REJECTED" | "CANCELLED";
 export type PaymentStatus = "PENDING" | "CONFIRMED" | "FAILED" | "CLEARED";
 export type DeliveryPaymentOption = "PAY_AT_CHECKOUT" | "PAY_UPON_FULFILLMENT";
+
 export interface OrderItem { productId: string; productName: string; quantity: number; unitPrice: number; subtotal: number; }
+
 export interface CustomerOrder {
   _id: string; orderNumber: string; _creationTime: number;
   telegramUserId?: string; telegramDisplayName?: string; telegramUsername?: string;
@@ -19,10 +20,15 @@ export interface CustomerOrder {
   adminNotes?: string; receiptUrl?: string; receiptOcrData?: ReceiptOcrResult;
   deliveryPaymentOption?: DeliveryPaymentOption;
 }
+
 type FirestoreOrder = Omit<CustomerOrder, "_id" | "_creationTime"> & { createdAt?: Timestamp | null; updatedAt?: Timestamp | null };
 const ORDERS_COLLECTION = "orders";
 const CUSTOMERS_COLLECTION = "customers";
-function fromFirestore(id: string, data: FirestoreOrder): CustomerOrder { const createdAt = data.createdAt; return { ...data, _id: id, _creationTime: createdAt instanceof Timestamp ? createdAt.toMillis() : Date.now() }; }
+
+function fromFirestore(id: string, data: FirestoreOrder): CustomerOrder {
+  const createdAt = data.createdAt;
+  return { ...data, _id: id, _creationTime: createdAt instanceof Timestamp ? createdAt.toMillis() : Date.now() };
+}
 
 export function useOrders(telegramUserId?: string) {
   const [orders, setOrders] = useState<CustomerOrder[]>([]);
@@ -30,28 +36,18 @@ export function useOrders(telegramUserId?: string) {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    let unsubscribe: (() => void) | undefined;
-    let cancelled = false;
     setLoading(true); setError(null);
-    ensureFirebaseSession().then(() => {
-      if (cancelled) return;
-      const ordersQuery = query(collection(db, ORDERS_COLLECTION), orderBy("createdAt", "desc"));
-      unsubscribe = onSnapshot(ordersQuery, (snapshot) => {
-        setOrders(snapshot.docs.map((d) => fromFirestore(d.id, d.data() as FirestoreOrder)));
-        setLoading(false);
-      }, (snapshotError) => {
-        console.error("Failed to subscribe to orders:", snapshotError);
-        setError("Unable to load orders. Please refresh and try again."); setLoading(false);
-      });
-    }).catch((authError) => {
-      console.error("Firebase authentication failed:", authError);
-      setError("Secure session unavailable. Please reopen the app."); setLoading(false);
+    const ordersQuery = query(collection(db, ORDERS_COLLECTION), orderBy("createdAt", "desc"));
+    return onSnapshot(ordersQuery, (snapshot) => {
+      setOrders(snapshot.docs.map((d) => fromFirestore(d.id, d.data() as FirestoreOrder)));
+      setLoading(false);
+    }, (snapshotError) => {
+      console.error("Failed to subscribe to orders:", snapshotError);
+      setError("Unable to load orders. Please refresh and try again."); setLoading(false);
     });
-    return () => { cancelled = true; unsubscribe?.(); };
   }, []);
 
   const createOrder = useCallback(async (orderData: Omit<CustomerOrder, "_id" | "_creationTime">) => {
-    await ensureFirebaseSession();
     const batch = writeBatch(db);
     const orderRef = doc(collection(db, ORDERS_COLLECTION));
     const now = serverTimestamp();
@@ -71,18 +67,15 @@ export function useOrders(telegramUserId?: string) {
   }, []);
 
   const updateOrderStatus = useCallback(async (orderId: string, newStatus: OrderStatus, notes?: string) => {
-    await ensureFirebaseSession();
     await updateDoc(doc(db, ORDERS_COLLECTION, orderId), { orderStatus: newStatus, ...(notes !== undefined ? { adminNotes: notes } : {}), updatedAt: serverTimestamp() });
   }, []);
   const updateOrderOcr = useCallback(async (orderId: string, ocrData: ReceiptOcrResult, receiptUrl?: string) => {
-    await ensureFirebaseSession();
     await updateDoc(doc(db, ORDERS_COLLECTION, orderId), { receiptOcrData: ocrData, ...(receiptUrl ? { receiptUrl } : {}), updatedAt: serverTimestamp() });
   }, []);
   const updateOrderPaymentStatus = useCallback(async (orderId: string, paymentStatus: PaymentStatus, orderStatus?: OrderStatus) => {
-    await ensureFirebaseSession();
     await updateDoc(doc(db, ORDERS_COLLECTION, orderId), { paymentStatus, ...(orderStatus ? { orderStatus } : {}), updatedAt: serverTimestamp() });
   }, []);
-  const deleteOrder = useCallback(async (orderId: string) => { await ensureFirebaseSession(); await deleteDoc(doc(db, ORDERS_COLLECTION, orderId)); }, []);
+  const deleteOrder = useCallback(async (orderId: string) => { await deleteDoc(doc(db, ORDERS_COLLECTION, orderId)); }, []);
 
   const customerFilteredOrders = telegramUserId ? orders.filter((order) => order.telegramUserId === telegramUserId) : orders;
   return { orders: customerFilteredOrders, allOrders: orders, loading, error, createOrder, updateOrderStatus, updateOrderOcr, updateOrderPaymentStatus, deleteOrder };
