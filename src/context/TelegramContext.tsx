@@ -18,21 +18,9 @@ interface TelegramContextType {
   isTelegramEnv: boolean;
 }
 
-const DEFAULT_CUSTOMER: TelegramCustomer = {
-  telegramUserId: "1085949511",
-  telegramDisplayName: "Marcus Vance",
-  telegramUsername: "marcus_v",
-  telegramFirstName: "Marcus",
-  telegramLanguageCode: "en",
-};
-
 function getInitialTelegramState() {
   if (typeof window === "undefined") {
-    return {
-      customer: DEFAULT_CUSTOMER,
-      sessionToken: "session_prime_user",
-      isTelegramEnv: false,
-    };
+    return { customer: null, sessionToken: null, isTelegramEnv: false };
   }
 
   try {
@@ -56,7 +44,7 @@ function getInitialTelegramState() {
     const user = tgWebApp?.initDataUnsafe?.user;
     if (user) {
       const fullName = [user.first_name, user.last_name].filter(Boolean).join(" ") || `TG User ${user.id}`;
-      const tgCustomer: TelegramCustomer = {
+      const customer: TelegramCustomer = {
         telegramUserId: String(user.id),
         telegramDisplayName: fullName,
         telegramUsername: user.username,
@@ -64,14 +52,10 @@ function getInitialTelegramState() {
         telegramLastName: user.last_name,
         telegramLanguageCode: user.language_code || "en",
       };
-      const token = `tg_sess_${user.id}`;
+      const token = tgWebApp.initData || `tg_sess_${user.id}`;
       sessionStorage.setItem("prime_session", token);
-      sessionStorage.setItem("prime_customer", JSON.stringify(tgCustomer));
-      return {
-        customer: tgCustomer,
-        sessionToken: token,
-        isTelegramEnv: true,
-      };
+      sessionStorage.setItem("prime_customer", JSON.stringify(customer));
+      return { customer, sessionToken: token, isTelegramEnv: true };
     }
 
     const storedCustomer = sessionStorage.getItem("prime_customer");
@@ -79,26 +63,22 @@ function getInitialTelegramState() {
     if (storedCustomer) {
       return {
         customer: JSON.parse(storedCustomer) as TelegramCustomer,
-        sessionToken: storedSession || "session_prime_user",
+        sessionToken: storedSession,
         isTelegramEnv: false,
       };
     }
   } catch {
-    // fallback
+    // Invalid or unavailable browser session: remain unauthenticated.
   }
 
-  return {
-    customer: DEFAULT_CUSTOMER,
-    sessionToken: "session_prime_user",
-    isTelegramEnv: false,
-  };
+  return { customer: null, sessionToken: null, isTelegramEnv: false };
 }
 
 const TelegramContext = createContext<TelegramContextType>({
   isLoading: false,
-  isAuthenticated: true,
-  customer: DEFAULT_CUSTOMER,
-  sessionToken: "session_prime_user",
+  isAuthenticated: false,
+  customer: null,
+  sessionToken: null,
   error: null,
   isTelegramEnv: false,
 });
@@ -112,20 +92,14 @@ export function TelegramProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     try {
       const tgWebApp = (window as unknown as {
-        Telegram?: {
-          WebApp?: {
-            ready?: () => void;
-            expand?: () => void;
-          };
-        };
+        Telegram?: { WebApp?: { ready?: () => void; expand?: () => void } };
       }).Telegram?.WebApp;
-
       if (tgWebApp) {
         tgWebApp.ready?.();
         tgWebApp.expand?.();
       }
     } catch {
-      // ignore
+      // ignore Telegram bridge errors
     }
   }, []);
 
@@ -133,7 +107,7 @@ export function TelegramProvider({ children }: { children: React.ReactNode }) {
     <TelegramContext.Provider
       value={{
         isLoading: false,
-        isAuthenticated: true,
+        isAuthenticated: Boolean(customer),
         customer,
         sessionToken,
         error: null,
