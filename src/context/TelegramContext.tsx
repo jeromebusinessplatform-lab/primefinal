@@ -8,6 +8,7 @@ export interface TelegramCustomer {
   telegramLastName?: string;
   telegramLanguageCode?: string;
 }
+
 interface TelegramContextType {
   isLoading: boolean;
   isAuthenticated: boolean;
@@ -17,55 +18,39 @@ interface TelegramContextType {
   isTelegramEnv: boolean;
 }
 
-const TelegramContext = createContext<TelegramContextType>({ isLoading: true, isAuthenticated: false, customer: null, sessionToken: null, error: null, isTelegramEnv: false });
-
-export function TelegramProvider({ children }: { children: React.ReactNode }) {
-  const [isLoading, setIsLoading] = useState(true);
-  const [customer, setCustomer] = useState<TelegramCustomer | null>(null);
-  const [sessionToken, setSessionToken] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [isTelegramEnv, setIsTelegramEnv] = useState(false);
-
-  useEffect(() => {
-    let cancelled = false;
-    const tgWebApp = (window as unknown as { Telegram?: { WebApp?: { initData?: string; initDataUnsafe?: { user?: { id: number; first_name: string; last_name?: string; username?: string; language_code?: string } }; ready?: () => void; expand?: () => void } } }).Telegram?.WebApp;
-    setIsTelegramEnv(Boolean(tgWebApp));
-    tgWebApp?.ready?.();
-    tgWebApp?.expand?.();
-
-    async function authenticate() {
-      try {
-        if (!tgWebApp?.initData) {
-          setError("This storefront must be opened from the PRIME Telegram Mini App.");
-          return;
-        }
-        const response = await fetch("/api/auth/telegram", { method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ initData: tgWebApp.initData }) });
-        const data = await response.json().catch(() => ({}));
-        if (!response.ok || !data.success) throw new Error(data.error || "Telegram authentication failed");
-        if (cancelled) return;
-        const user = data.user as Record<string, unknown>;
-        const verifiedCustomer: TelegramCustomer = {
-          telegramUserId: String(data.userId),
-          telegramDisplayName: [user.first_name, user.last_name].filter(Boolean).join(" ") || `TG User ${data.userId}`,
-          telegramUsername: typeof user.username === "string" ? user.username : undefined,
-          telegramFirstName: typeof user.first_name === "string" ? user.first_name : undefined,
-          telegramLastName: typeof user.last_name === "string" ? user.last_name : undefined,
-          telegramLanguageCode: typeof user.language_code === "string" ? user.language_code : undefined,
-        };
-        setCustomer(verifiedCustomer);
-        setSessionToken(tgWebApp.initData || null);
-        setError(null);
-      } catch (authError) {
-        if (!cancelled) setError(authError instanceof Error ? authError.message : "Telegram authentication failed");
-      } finally {
-        if (!cancelled) setIsLoading(false);
-      }
+function getInitialTelegramState() {
+  if (typeof window === "undefined") return { customer: null, sessionToken: null, isTelegramEnv: false };
+  try {
+    const tgWebApp = (window as unknown as { Telegram?: { WebApp?: { initData?: string; initDataUnsafe?: { user?: { id: number; first_name: string; last_name?: string; username?: string; language_code?: string } } } } }).Telegram?.WebApp;
+    const user = tgWebApp?.initDataUnsafe?.user;
+    if (user) {
+      const fullName = [user.first_name, user.last_name].filter(Boolean).join(" ") || `TG User ${user.id}`;
+      const customer: TelegramCustomer = { telegramUserId: String(user.id), telegramDisplayName: fullName, telegramUsername: user.username, telegramFirstName: user.first_name, telegramLastName: user.last_name, telegramLanguageCode: user.language_code || "en" };
+      const token = tgWebApp.initData || `tg_sess_${user.id}`;
+      sessionStorage.setItem("prime_session", token);
+      sessionStorage.setItem("prime_customer", JSON.stringify(customer));
+      return { customer, sessionToken: token, isTelegramEnv: true };
     }
-    void authenticate();
-    return () => { cancelled = true; };
-  }, []);
-
-  return <TelegramContext.Provider value={{ isLoading, isAuthenticated: Boolean(customer), customer, sessionToken, error, isTelegramEnv }}>{children}</TelegramContext.Provider>;
+    const storedCustomer = sessionStorage.getItem("prime_customer");
+    const storedSession = sessionStorage.getItem("prime_session");
+    if (storedCustomer) return { customer: JSON.parse(storedCustomer) as TelegramCustomer, sessionToken: storedSession, isTelegramEnv: false };
+  } catch { /* invalid browser session */ }
+  return { customer: null, sessionToken: null, isTelegramEnv: false };
 }
 
+const TelegramContext = createContext<TelegramContextType>({ isLoading: false, isAuthenticated: false, customer: null, sessionToken: null, error: null, isTelegramEnv: false });
+
+export function TelegramProvider({ children }: { children: React.ReactNode }) {
+  const [initial] = useState(getInitialTelegramState);
+  const [customer] = useState<TelegramCustomer | null>(initial.customer);
+  const [sessionToken] = useState<string | null>(initial.sessionToken);
+  const [isTelegramEnv] = useState<boolean>(initial.isTelegramEnv);
+  useEffect(() => {
+    try {
+      const tgWebApp = (window as unknown as { Telegram?: { WebApp?: { ready?: () => void; expand?: () => void } } }).Telegram?.WebApp;
+      if (tgWebApp) { tgWebApp.ready?.(); tgWebApp.expand?.(); }
+    } catch { /* ignore Telegram bridge errors */ }
+  }, []);
+  return <TelegramContext.Provider value={{ isLoading: false, isAuthenticated: Boolean(customer), customer, sessionToken, error: null, isTelegramEnv }}>{children}</TelegramContext.Provider>;
+}
 export function useTelegram() { return useContext(TelegramContext); }
