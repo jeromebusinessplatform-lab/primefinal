@@ -1,14 +1,12 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Public catalog/config reads are intentionally read-only in the browser.
-    // All writes, including authoritative orders/customers, go through the server Admin SDK.
     match /products/{document=**} { allow read: if true; allow write: if false; }
     match /couriers/{document=**} { allow read: if true; allow write: if false; }
     match /charges/{document=**} { allow read: if true; allow write: if false; }
     match /discounts/{document=**} { allow read: if true; allow write: if false; }
     match /orders/{document=**} { allow read: if true; allow write: if false; }
-    match /customers/{document=**} { allow read: if true; allow write: if false; }
+    match /customers/{document=**} { allow read, write: if false; }
     match /{document=**} { allow read, write: if false; }
   }
 }
