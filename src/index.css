@@ -19,6 +19,26 @@
   }
 }
 
+@layer components {
+  /* Global content surfaces: keep the storefront/admin visually open instead of
+     boxing every section into a separate card. Interactive controls and dialogs
+     retain their own component styling. */
+  :where(main, section, article) > :where(div, ul, ol).bg-white.rounded-2xl,
+  :where(main, section, article) > :where(div, ul, ol).bg-white.rounded-xl,
+  :where(main, section, article) > :where(div, ul, ol).bg-white.rounded-lg {
+    border-radius: 0;
+    border-color: transparent;
+    box-shadow: none;
+  }
+
+  /* Product/content grids should use the available display width. */
+  :where(main, section, article) > .max-w-5xl,
+  :where(main, section, article) > .max-w-6xl,
+  :where(main, section, article) > .max-w-7xl {
+    max-width: none;
+  }
+}
+
 .font-heading {
   font-family: 'Roboto Condensed', sans-serif;
   font-weight: 400;
@@ -37,4 +57,3 @@
 .font-condensed {
   font-family: 'Roboto Condensed', sans-serif;
 }
-
