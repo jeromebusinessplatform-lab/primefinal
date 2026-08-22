@@ -1,6 +1,5 @@
 import type { ReactNode } from "react";
-import { createContext, useContext, useState } from "react";
-import { APP_CONFIG } from "@/lib/config.ts";
+import { createContext, useContext, useEffect, useState } from "react";
 
 interface AdminContextType {
   isAuthenticated: boolean;
@@ -12,42 +11,43 @@ interface AdminContextType {
 const AdminContext = createContext<AdminContextType | null>(null);
 
 export function AdminProvider({ children }: { children: ReactNode }) {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(
-    () => typeof window !== "undefined" && localStorage.getItem("prime_admin_authenticated") === "true"
-  );
-  const [isLoading] = useState<boolean>(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/admin/session", { credentials: "same-origin" })
+      .then((response) => response.ok ? response.json() : { authenticated: false })
+      .then((data: { authenticated?: boolean }) => setIsAuthenticated(Boolean(data.authenticated)))
+      .catch(() => setIsAuthenticated(false))
+      .finally(() => setIsLoading(false));
+  }, []);
 
   const login = async (code: string) => {
     try {
-      const trimmed = code.trim();
-      const validCodes = [
-        APP_CONFIG.ADMIN_ACCESS_CODE,
-        "COREDEVELOPER1991",
-        "admin123",
-        "prime2026",
-        "123456",
-      ];
-      if (validCodes.includes(trimmed)) {
-        localStorage.setItem("prime_admin_authenticated", "true");
-        setIsAuthenticated(true);
-        return { success: true };
+      const response = await fetch("/api/admin/login", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok || !data.success) {
+        return { success: false, error: data.error || "Invalid access code" };
       }
-      return { success: false, error: "Invalid access code" };
+      setIsAuthenticated(true);
+      return { success: true };
     } catch {
-      return { success: false, error: "Login error" };
+      return { success: false, error: "Unable to reach the authentication server" };
     }
   };
 
   const logout = () => {
-    localStorage.removeItem("prime_admin_authenticated");
-    setIsAuthenticated(false);
+    void fetch("/api/admin/logout", { method: "POST", credentials: "same-origin" }).finally(() => {
+      setIsAuthenticated(false);
+    });
   };
 
-  return (
-    <AdminContext.Provider value={{ isAuthenticated, isLoading, login, logout }}>
-      {children}
-    </AdminContext.Provider>
-  );
+  return <AdminContext.Provider value={{ isAuthenticated, isLoading, login, logout }}>{children}</AdminContext.Provider>;
 }
 
 export function useAdmin() {
