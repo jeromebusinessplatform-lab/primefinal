@@ -1,5 +1,5 @@
 @import "tailwindcss";
-@import url('https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
 
 @layer base {
   * { box-sizing: border-box; }
@@ -20,22 +20,12 @@
 
 .font-heading, .font-subheading, .font-condensed { font-family: "SamsungOne", "Samsung Sans", ui-sans-serif, system-ui, sans-serif; }
 .font-body { font-family: "SamsungOne", "Samsung Sans", ui-sans-serif, system-ui, sans-serif; }
-.font-flex { font-family: "IBM Plex Sans", "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace; font-variant-numeric: tabular-nums; }
+.font-flex { font-family: "IBM Plex Mono", "IBM Flex", ui-monospace, SFMono-Regular, Menlo, monospace; font-variant-numeric: tabular-nums; }
 
-.prime-admin-card {
-  background: linear-gradient(to bottom, #fff, #fafafa);
-  border: 1px solid #a3a3a3;
-  border-radius: 12px;
-  box-shadow: 0 2px 5px rgba(0,0,0,.14);
-}
+.prime-admin-card { background: linear-gradient(to bottom, #fff, #fafafa); border: 1px solid #a3a3a3; border-radius: 12px; box-shadow: 0 2px 5px rgba(0,0,0,.14); }
 .prime-admin-card:hover { box-shadow: 0 4px 10px rgba(0,0,0,.16); }
-
-/* Keep explicit Roboto usage intact; all unqualified UI typography uses SamsungOne. */
-/* Mobile admin/configuration defaults: vertical flow, no horizontal scrolling. */
 .admin-page, [data-admin-page="true"] { width: 100%; min-width: 0; overflow-x: hidden; }
-.admin-page table, [data-admin-page="true"] table { width: 100%; max-width: 100%; }
 @media (max-width: 640px) {
   .prime-admin-card { border-radius: 10px; }
   .admin-page, [data-admin-page="true"] { padding-left: 0; padding-right: 0; }
-  .admin-page .overflow-x-auto, [data-admin-page="true"] .overflow-x-auto { overflow-x: auto; }
 }
