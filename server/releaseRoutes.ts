@@ -35,6 +35,21 @@ function adminSession(req: Request): boolean {
 }
 function setCookie(res: Response, name: string, value: string, maxAge: number) { res.setHeader("Set-Cookie", `${name}=${encodeURIComponent(value)}; Path=/; HttpOnly; SameSite=Strict; ${process.env.NODE_ENV === "production" ? "Secure; " : ""}Max-Age=${Math.floor(maxAge / 1000)}`); }
 function plain(id: string, data: any) { const out: any = { id, ...data }; for (const [k, v] of Object.entries(out)) if (v instanceof Timestamp || (v && typeof (v as any).toMillis === "function")) out[k] = (v as any).toMillis(); return out; }
+function manilaOrderNumber(value: number | Date) {
+  const date = value instanceof Date ? value : new Date(value);
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Asia/Manila",
+    year: "2-digit",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hourCycle: "h23",
+  }).formatToParts(date).reduce<Record<string, string>>((acc, part) => { acc[part.type] = part.value; return acc; }, {});
+  return `${parts.day}${parts.month}${parts.year}${parts.hour}${parts.minute}${parts.second}`;
+}
+function primeMemberId(telegramId: string) { return `PRIME-${telegramId.slice(-8).padStart(8, "0")}`; }
 
 export function installReleaseRoutes(app: Application) {
   app.post("/api/auth/telegram", (req, res) => {
@@ -45,24 +60,45 @@ export function installReleaseRoutes(app: Application) {
 
   app.get("/api/orders", async (req, res) => {
     const isAdmin = adminSession(req); const tg = telegramUserId(req); if (!isAdmin && !tg) return res.status(401).json({ error: "Authentication required" });
-    try { const query = db().collection("orders").orderBy("createdAt", "desc"); const snap = await query.get(); const orders = snap.docs.map(d => plain(d.id, d.data())).filter(o => isAdmin || String(o.telegramUserId) === tg); return res.json({ orders }); }
-    catch { return res.status(500).json({ error: "Unable to load orders" }); }
+    try {
+      const snap = await db().collection("orders").orderBy("createdAt", "desc").get();
+      const orders = snap.docs.map(d => {
+        const raw = plain(d.id, d.data());
+        if (!raw.orderNumber) raw.orderNumber = manilaOrderNumber(Number(raw.createdAt || Date.now()));
+        return raw;
+      }).filter(o => isAdmin || String(o.telegramUserId) === tg);
+      return res.json({ orders });
+    } catch { return res.status(500).json({ error: "Unable to load orders" }); }
   });
 
   app.post("/api/orders", async (req, res) => {
     const tg = telegramUserId(req); if (!tg) return res.status(401).json({ error: "Verified Telegram identity required" });
     const input = req.body || {}; const items = Array.isArray(input.items) ? input.items : []; if (!items.length) return res.status(400).json({ error: "Cannot place an order without items" });
-    const firestore = db(); const orderRef = firestore.collection("orders").doc(); const customerRef = firestore.collection("customers").doc(tg);
+    const firestore = db(); const orderRef = firestore.collection("orders").doc(); const customerRef = firestore.collection("customers").doc(tg); const submittedAt = new Date(); const orderNumber = manilaOrderNumber(submittedAt);
     try {
       const result = await firestore.runTransaction(async tx => {
         const products = await Promise.all(items.map((item: any) => tx.get(firestore.collection("products").doc(String(item.productId)))));
         const normalized: any[] = []; let subtotal = 0;
         products.forEach((snap, i) => { const item = items[i]; if (!snap.exists) throw new Error(`Product ${item.productId} is no longer available.`); const p: any = snap.data(); const qty = Number(item.quantity); const stock = Number(p.stock || 0); if (!Number.isInteger(qty) || qty <= 0 || p.available === false || stock < qty) throw new Error(`${p.name || item.productId} does not have enough stock.`); const unitPrice = Number(p.bundleCalculatedPrice ?? p.salePrice ?? p.price ?? 0); if (!Number.isFinite(unitPrice) || unitPrice < 0) throw new Error(`Invalid price configuration for ${p.name || item.productId}.`); const line = Math.round(unitPrice * qty * 100) / 100; subtotal += line; normalized.push({ productId: String(item.productId), productName: p.name || item.productName, quantity: qty, unitPrice, subtotal: line }); tx.update(snap.ref, { stock: stock - qty, updatedAt: FieldValue.serverTimestamp() }); });
         subtotal = Math.round(subtotal * 100) / 100; const discount = Math.max(0, Math.min(Number(input.discount || 0) || 0, subtotal)); const deliveryFee = Math.max(0, Number(input.deliveryFee || 0) || 0); const chargesSnap = await firestore.collection("charges").get(); const base = subtotal - discount; const charges = Math.round(chargesSnap.docs.reduce((sum, d) => { const c: any = d.data(); if (c.active !== true) return sum; const amount = Number(c.amount || 0); return sum + (c.type === "percent" ? base * amount / 100 : amount); }, 0) * 100) / 100; const tax = Math.round((base + charges) * 0.05 * 100) / 100; const total = Math.round((base + charges + tax + deliveryFee) * 100) / 100; const now = FieldValue.serverTimestamp();
-        const order = { ...input, telegramUserId: tg, items: normalized, subtotal, discount, charges, deliveryFee, total, paymentStatus: "PENDING", orderStatus: "REVIEW", createdAt: now, updatedAt: now };
-        tx.set(orderRef, order); tx.set(customerRef, { id: tg, telegramUserId: tg, telegramDisplayName: String(input.telegramDisplayName || "Unknown"), telegramUsername: input.telegramUsername || null, primeMemberId: `PC${tg.slice(0, 8).toUpperCase()}`, vipTier: "Bronze", updatedAt: now }, { merge: true }); return { ...order, id: orderRef.id };
+        const order = { ...input, telegramUserId: tg, items: normalized, subtotal, discount, charges, deliveryFee, total, orderNumber, paymentStatus: "PENDING", orderStatus: "REVIEW", createdAt: now, updatedAt: now };
+        tx.set(orderRef, order); tx.set(customerRef, { id: tg, telegramUserId: tg, telegramDisplayName: String(input.telegramDisplayName || "Unknown"), telegramUsername: input.telegramUsername || null, primeMemberId: primeMemberId(tg), vipTier: "Bronze", updatedAt: now }, { merge: true }); return { ...order, id: orderRef.id, createdAt: submittedAt.getTime() };
       }); return res.status(201).json({ order: result });
     } catch (e: any) { return res.status(400).json({ error: e?.message || "Unable to create order" }); }
+  });
+
+  app.post("/api/customer/migration", async (req, res) => {
+    const tg = telegramUserId(req); if (!tg) return res.status(401).json({ error: "Authentication required" });
+    try {
+      const ref = db().collection("customers").doc(tg); const snap = await ref.get();
+      if (!snap.exists) return res.status(404).json({ error: "Customer account not found" });
+      const current = String(snap.data()?.primeMemberId || "");
+      if (!current || current.startsWith("PC")) {
+        const migrated = primeMemberId(tg); await ref.set({ primeMemberId: migrated, updatedAt: FieldValue.serverTimestamp(), primeMemberIdMigratedAt: FieldValue.serverTimestamp(), primeMemberIdPrevious: current || null }, { merge: true });
+        return res.json({ migrated: true, previousId: current || null, primeMemberId: migrated, notification: `Your PRIME™ Member ID has been migrated from ${current || "the legacy ID"} to ${migrated}.` });
+      }
+      return res.json({ migrated: false, primeMemberId: current });
+    } catch { return res.status(500).json({ error: "Unable to migrate PRIME™ Member ID" }); }
   });
 
   app.patch("/api/orders/:id", async (req, res) => {
@@ -73,17 +109,11 @@ export function installReleaseRoutes(app: Application) {
   app.delete("/api/orders/:id", async (req, res) => { if (!adminSession(req)) return res.status(401).json({ error: "Admin authentication required" }); try { await db().collection("orders").doc(req.params.id).delete(); return res.json({ success: true }); } catch { return res.status(500).json({ error: "Unable to delete order" }); } });
 
   app.get("/api/customers", async (req, res) => {
-    const isAdmin = adminSession(req);
-    const tg = telegramUserId(req);
-    if (!isAdmin && !tg) return res.status(401).json({ error: "Authentication required" });
+    const isAdmin = adminSession(req); const tg = telegramUserId(req); if (!isAdmin && !tg) return res.status(401).json({ error: "Authentication required" });
     try {
       const ref = db().collection("customers");
-      if (isAdmin) {
-        const snap = await ref.orderBy("updatedAt", "desc").get();
-        return res.json({ customers: snap.docs.map(d => plain(d.id, d.data())) });
-      }
-      const snap = await ref.doc(tg).get();
-      return res.json({ customers: snap.exists ? [plain(snap.id, snap.data())] : [] });
+      if (isAdmin) { const snap = await ref.orderBy("updatedAt", "desc").get(); return res.json({ customers: snap.docs.map(d => plain(d.id, d.data())) }); }
+      const snap = await ref.doc(tg).get(); return res.json({ customers: snap.exists ? [plain(snap.id, snap.data())] : [] });
     } catch { return res.status(500).json({ error: "Unable to load customers" }); }
   });
 }
