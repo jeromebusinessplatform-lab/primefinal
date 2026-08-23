@@ -2,295 +2,86 @@ import { useState } from "react";
 import { useTelegram } from "@/context/TelegramContext.tsx";
 import { useOrders, type CustomerOrder } from "@/hooks/useOrders.ts";
 import { useReviews } from "@/hooks/useReviews.ts";
-import { Package, Clock, Truck, Star, MessageSquare, CheckCircle2, ChevronRight } from "lucide-react";
+import { Package, Download, X, Printer, MessageSquare } from "lucide-react";
 import { Link } from "react-router-dom";
 import { formatCurrency } from "@/lib/utils.ts";
-import { StarRating } from "@/components/StarRating.tsx";
 import { ProductReviewModal } from "@/components/ProductReviewModal.tsx";
 
 const STATUS_LABELS: Record<string, string> = {
-  REVIEW: "Under Review",
-  PAYMENT_CONFIRMED: "Payment Confirmed",
-  START_PACKING: "Packing",
-  READY: "Ready for Pickup",
-  AWAITING_RIDER: "Awaiting Rider",
-  DISPATCHED: "Dispatched",
-  DELIVERED: "Delivered",
-  PAYMENT_FAILED: "Payment Failed",
-  HOLD_ORDER: "On Hold",
-  REQUEST_RESUBMIT: "Resubmit Required",
-  PAYMENT_CLEARED: "Payment Cleared",
-  FINAL_FOLLOW_UP: "Final Follow-up",
-  REJECTED: "Rejected",
-  CANCELLED: "Cancelled",
+  REVIEW: "Under Review", PAYMENT_CONFIRMED: "Payment Confirmed", START_PACKING: "Packing", READY: "Ready for Pickup",
+  AWAITING_RIDER: "Awaiting Rider", DISPATCHED: "Dispatched", DELIVERED: "Delivered", PAYMENT_FAILED: "Payment Failed",
+  HOLD_ORDER: "On Hold", REQUEST_RESUBMIT: "Resubmit Required", PAYMENT_CLEARED: "Payment Cleared", FINAL_FOLLOW_UP: "Final Follow-up",
+  REJECTED: "Rejected", CANCELLED: "Cancelled",
 };
 
-const STATUS_COLORS: Record<string, string> = {
-  REVIEW: "#f97316",
-  PAYMENT_CONFIRMED: "#22c55e",
-  START_PACKING: "#3b82f6",
-  READY: "#22c55e",
-  AWAITING_RIDER: "#3b82f6",
-  DISPATCHED: "#3b82f6",
-  DELIVERED: "#22c55e",
-  PAYMENT_FAILED: "#ef4444",
-  HOLD_ORDER: "#f97316",
-  REQUEST_RESUBMIT: "#f97316",
-  PAYMENT_CLEARED: "#22c55e",
-  FINAL_FOLLOW_UP: "#f97316",
-  REJECTED: "#ef4444",
-  CANCELLED: "#6b7280",
-};
+function orderDate(order: CustomerOrder) {
+  return new Date(order._creationTime).toLocaleString("en-PH", { timeZone: "Asia/Manila", dateStyle: "medium", timeStyle: "short" });
+}
+
+function receiptHtml(order: CustomerOrder) {
+  const items = order.items.map(item => `<tr><td>${item.quantity} × ${escapeHtml(item.productName)}</td><td style="text-align:right">${formatCurrency(item.subtotal)}</td></tr>`).join("");
+  return `<!doctype html><html><head><meta charset="utf-8"><title>PRIME Receipt ${order.orderNumber}</title><style>body{font-family:Arial,sans-serif;max-width:680px;margin:32px auto;padding:0 20px;color:#111}h1{margin:0 0 4px}small{color:#666}table{width:100%;border-collapse:collapse;margin:20px 0}td{padding:8px 0;border-bottom:1px solid #ddd}.total{font-weight:700;font-size:20px}</style></head><body><h1>PRIME™ TRANSACTION RECEIPT</h1><small>Order #${escapeHtml(order.orderNumber)} • ${escapeHtml(orderDate(order))}</small><p><b>${escapeHtml(order.receiverName || "Customer")}</b><br>${escapeHtml(order.contactNumber || "")}<br>${escapeHtml(order.deliveryAddress || "")}</p><table>${items}<tr><td>Subtotal</td><td style="text-align:right">${formatCurrency(order.subtotal)}</td></tr><tr><td>Discount</td><td style="text-align:right">-${formatCurrency(order.discount)}</td></tr><tr><td>Delivery Fee</td><td style="text-align:right">${formatCurrency(order.deliveryFee)}</td></tr><tr class="total"><td>Total</td><td style="text-align:right">${formatCurrency(order.total)}</td></tr></table><p>Payment: ${escapeHtml(order.paymentMethodName || "—")}<br>Status: ${escapeHtml(STATUS_LABELS[order.orderStatus] || order.orderStatus)}</p></body></html>`;
+}
+function escapeHtml(value: string) { return value.replace(/[&<>\"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\\": "&#92;", '"': "&quot;" }[c] || c)); }
+
+function downloadReceipt(order: CustomerOrder) {
+  const blob = new Blob([receiptHtml(order)], { type: "text/html;charset=utf-8" });
+  const url = URL.createObjectURL(blob); const anchor = document.createElement("a"); anchor.href = url; anchor.download = `PRIME-Receipt-${order.orderNumber}.html`; anchor.click(); URL.revokeObjectURL(url);
+}
 
 export default function OrdersPage() {
   const { customer } = useTelegram();
-  const { orders, loading } = useOrders(customer?.telegramUserId);
-  const { reviews, getReviewForOrderItem } = useReviews();
-
-  // Review Modal State
-  const [reviewModalState, setReviewModalState] = useState<{
-    isOpen: boolean;
-    productId: string;
-    productName: string;
-    orderId: string;
-    orderNumber: string;
-    existingReview?: any;
-  }>({
-    isOpen: false,
-    productId: "",
-    productName: "",
-    orderId: "",
-    orderNumber: "",
-  });
-
-  const handleOpenReview = (order: CustomerOrder, item: CustomerOrder["items"][0]) => {
-    const existing = getReviewForOrderItem(order._id, item.productId);
-    setReviewModalState({
-      isOpen: true,
-      productId: item.productId,
-      productName: item.productName,
-      orderId: order._id,
-      orderNumber: order.orderNumber,
-      existingReview: existing,
-    });
-  };
+  const { orders, loading, error } = useOrders(customer?.telegramUserId);
+  const { getReviewForOrderItem } = useReviews();
+  const [selectedOrder, setSelectedOrder] = useState<CustomerOrder | null>(null);
+  const [receiptOrder, setReceiptOrder] = useState<CustomerOrder | null>(null);
+  const [reviewState, setReviewState] = useState<{ order: CustomerOrder; productId: string; productName: string } | null>(null);
 
   return (
     <div className="bg-[#f3f4f6] min-h-full pb-10">
       <div className="bg-white border-b border-neutral-200 px-4 py-3 flex items-center justify-between">
-        <div>
-          <h1
-            className="text-black font-normal uppercase text-xl leading-tight"
-            style={{ fontFamily: "'Roboto Condensed', sans-serif" }}
-          >
-            MY ORDERS
-          </h1>
-          <p className="text-xs text-neutral-500 font-normal" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
-            Live order queue, fulfillment tracking & product reviews
-          </p>
-        </div>
-        <Link
-          to="/shop"
-          className="text-xs text-black border border-neutral-200 px-3 py-1.5 rounded-lg hover:bg-neutral-50 font-normal"
-          style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
-        >
-          Shop More
-        </Link>
+        <div><h1 className="text-black font-normal uppercase text-xl leading-tight">ORDERS</h1><p className="text-xs text-neutral-500">Compact order history • tap an order for full details</p></div>
+        <Link to="/shop" className="text-xs border border-neutral-200 px-3 py-1.5 rounded-lg">Shop</Link>
       </div>
 
-      {loading ? (
-        <div className="p-3 space-y-2.5">
-          {Array.from({ length: 2 }).map((_, i) => (
-            <div key={i} className="bg-white rounded-2xl border border-neutral-200/90 p-3.5 shadow-xs animate-pulse">
-              <div className="flex items-start justify-between mb-2">
-                <div className="w-1/3 h-4 bg-neutral-200 rounded"></div>
-                <div className="w-1/4 h-4 bg-neutral-200 rounded-full"></div>
-              </div>
-              <div className="space-y-2 py-1">
-                <div className="h-3 bg-neutral-100 rounded w-full"></div>
-                <div className="h-3 bg-neutral-100 rounded w-2/3"></div>
-              </div>
-            </div>
-          ))}
-        </div>
-      ) : orders.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-20 text-neutral-400 bg-white m-3 rounded-2xl border border-neutral-200 p-8">
-          <Package size={48} className="mb-3 opacity-30" />
-          <p className="font-normal text-neutral-700" style={{ fontFamily: "'Roboto Condensed', sans-serif" }}>
-            No active orders
-          </p>
-          <Link
-            to="/shop"
-            className="mt-4 text-xs bg-black text-white font-normal px-4 py-2 rounded-xl"
-            style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
-          >
-            BROWSE PRODUCTS
-          </Link>
-        </div>
+      {loading ? <div className="p-3 space-y-2"><div className="h-14 bg-white rounded-xl border border-neutral-200 animate-pulse" /><div className="h-14 bg-white rounded-xl border border-neutral-200 animate-pulse" /></div> : error ? <div className="m-3 bg-white rounded-xl border p-5 text-sm text-red-600">{error}</div> : !orders.length ? (
+        <div className="m-3 bg-white rounded-2xl border border-neutral-200 p-8 text-center"><Package size={42} className="mx-auto mb-3 opacity-30" /><p className="font-semibold">No order history found</p><Link to="/shop" className="inline-block mt-3 text-xs bg-black text-white px-4 py-2 rounded-lg">BROWSE PRODUCTS</Link></div>
       ) : (
-        <div className="p-3 space-y-2.5">
-          {orders.map((order: CustomerOrder) => (
-            <div
-              key={order._id}
-              className="bg-white rounded-2xl border border-neutral-200/90 p-3.5 shadow-xs space-y-3"
-            >
-              <div className="flex items-start justify-between border-b border-neutral-100 pb-2.5">
-                <div>
-                  <div
-                    className="text-black font-normal leading-tight flex items-center gap-1.5"
-                    style={{
-                      fontFamily: "'Roboto Condensed', sans-serif",
-                      fontSize: "17px",
-                      letterSpacing: "0.5px",
-                    }}
-                  >
-                    <span>#{order.orderNumber}</span>
-                  </div>
-                  <div className="text-[11px] text-neutral-400 mt-0.5 font-normal" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
-                    {new Date(order._creationTime).toLocaleDateString("en-US", {
-                      month: "short",
-                      day: "numeric",
-                      year: "numeric",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                  </div>
-                </div>
-
-                <span
-                  className="text-[10px] font-normal px-2.5 py-0.5 rounded-full text-white uppercase"
-                  style={{
-                    backgroundColor: STATUS_COLORS[order.orderStatus] ?? "#6b7280",
-                    fontFamily: "'Roboto Condensed', sans-serif",
-                    letterSpacing: "0.5px",
-                  }}
-                >
-                  {STATUS_LABELS[order.orderStatus] ?? order.orderStatus}
-                </span>
-              </div>
-
-              {/* Items summary with individual Star Rating & Comment trigger */}
-              <div className="space-y-2.5">
-                <div className="text-[11px] font-medium text-neutral-400 uppercase tracking-wider" style={{ fontFamily: "'Roboto Condensed', sans-serif" }}>
-                  Purchased Items & Reviews
-                </div>
-
-                <div className="divide-y divide-neutral-100 space-y-2">
-                  {order.items.map((it, idx) => {
-                    const review = getReviewForOrderItem(order._id, it.productId);
-
-                    return (
-                      <div key={idx} className="pt-2 first:pt-0 space-y-1.5">
-                        <div className="flex justify-between items-start text-xs font-normal" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
-                          <div className="pr-2 font-medium text-black">
-                            <span className="font-bold text-neutral-800">{it.quantity}x</span> {it.productName}
-                          </div>
-                          <span className="font-semibold text-neutral-900 shrink-0 font-mono">
-                            {formatCurrency(it.subtotal)}
-                          </span>
-                        </div>
-
-                        {/* Rating and Review action / preview */}
-                        {review ? (
-                          <div className="bg-amber-50/70 border border-amber-200/80 rounded-xl p-2.5 text-xs space-y-1">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-1.5">
-                                <StarRating rating={review.rating} size={13} showScore={true} />
-                                <span className="text-[10px] text-amber-900 font-bold font-mono">Your Review</span>
-                              </div>
-                              <button
-                                type="button"
-                                onClick={() => handleOpenReview(order, it)}
-                                className="text-[11px] text-neutral-600 hover:text-black underline cursor-pointer"
-                                style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
-                              >
-                                Edit Review
-                              </button>
-                            </div>
-                            <p className="text-xs text-neutral-700 italic line-clamp-2" style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: "13px" }}>
-                              "{review.comment}"
-                            </p>
-                            {review.tags && review.tags.length > 0 && (
-                              <div className="flex flex-wrap gap-1 pt-0.5">
-                                {review.tags.map((tag) => (
-                                  <span
-                                    key={tag}
-                                    className="text-[9px] bg-white text-neutral-600 border border-amber-200 px-1.5 py-0.2 rounded-md font-mono"
-                                  >
-                                    #{tag}
-                                  </span>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-                        ) : (
-                          <div className="flex items-center justify-between bg-neutral-50 rounded-xl px-2.5 py-1.5 border border-neutral-200/70">
-                            <span className="text-[11px] text-neutral-500 flex items-center gap-1" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
-                              <Star size={11} className="text-amber-500 fill-amber-400" />
-                              Rate this product
-                            </span>
-                            <button
-                              type="button"
-                              onClick={() => handleOpenReview(order, it)}
-                              className="text-[11px] font-medium text-black bg-white hover:bg-neutral-100 border border-neutral-200 px-2.5 py-1 rounded-lg flex items-center gap-1 cursor-pointer transition shadow-2xs"
-                              style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
-                            >
-                              <MessageSquare size={11} className="text-neutral-700" />
-                              <span>Write Review</span>
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Order total info */}
-              <div className="flex items-center justify-between text-sm pt-2 border-t border-neutral-100">
-                <span className="text-xs text-neutral-500 font-normal" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
-                  {order.items.reduce((s, i) => s + i.quantity, 0)} items total
-                </span>
-                <span
-                  className="text-black font-semibold font-mono"
-                  style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: "18px" }}
-                >
-                  {formatCurrency(order.total)}
-                </span>
-              </div>
-
-              {!["DELIVERED", "CANCELLED", "REJECTED"].includes(order.orderStatus) && (
-                <div className="mt-2 pt-2 border-t border-neutral-100 flex items-center justify-between text-xs text-neutral-600 bg-neutral-50/80 -mx-3.5 -mb-3.5 p-2.5 rounded-b-2xl font-normal" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
-                  <div className="flex items-center gap-1.5 font-normal">
-                    <Clock size={13} className="text-orange-500" />
-                    <span>
-                      Queue #{order.queuePosition} • {order.estimatedWaitingMinutes} min wait
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-1.5 font-normal">
-                    <Truck size={13} className="text-blue-500" />
-                    <span>{order.estimatedDispatchTime}</span>
-                  </div>
-                </div>
-              )}
-            </div>
+        <div className="p-3 space-y-1.5">
+          {orders.map((order) => (
+            <button type="button" key={order._id} onClick={() => setSelectedOrder(order)} className="w-full text-left bg-white rounded-xl border border-neutral-200 px-3 py-2.5 flex items-center justify-between gap-3 hover:bg-neutral-50 active:bg-neutral-100">
+              <div className="min-w-0"><div className="font-flex tabular-nums text-sm truncate">#{order.orderNumber}</div><div className="text-[11px] text-neutral-400">{orderDate(order)}</div></div>
+              <div className="text-right shrink-0"><div className="text-[11px] uppercase">{STATUS_LABELS[order.orderStatus] || order.orderStatus}</div><div className="font-flex tabular-nums text-sm">{formatCurrency(order.total)}</div></div>
+            </button>
           ))}
         </div>
       )}
 
-      {/* Review Modal */}
-      <ProductReviewModal
-        isOpen={reviewModalState.isOpen}
-        onClose={() => setReviewModalState((prev) => ({ ...prev, isOpen: false }))}
-        productId={reviewModalState.productId}
-        productName={reviewModalState.productName}
-        orderId={reviewModalState.orderId}
-        orderNumber={reviewModalState.orderNumber}
-        userId={customer?.telegramUserId || "1085949511"}
-        userName={customer?.telegramDisplayName || "Marcus Vance"}
-        existingReview={reviewModalState.existingReview}
-      />
+      {selectedOrder && (
+        <div className="fixed inset-0 z-50 bg-black/50 p-3 flex items-end sm:items-center justify-center" onClick={() => setSelectedOrder(null)}>
+          <div className="w-full max-w-lg max-h-[88dvh] overflow-y-auto bg-white rounded-2xl shadow-xl" onClick={(e) => e.stopPropagation()}>
+            <div className="sticky top-0 bg-white border-b border-neutral-200 px-4 py-3 flex items-center justify-between"><div><div className="font-flex tabular-nums font-semibold">#{selectedOrder.orderNumber}</div><div className="text-[11px] text-neutral-400">{orderDate(selectedOrder)}</div></div><button type="button" onClick={() => setSelectedOrder(null)}><X size={18} /></button></div>
+            <div className="p-4 space-y-4 text-sm">
+              <div className="grid grid-cols-2 gap-2 text-xs"><div><div className="text-neutral-400">STATUS</div><div>{STATUS_LABELS[selectedOrder.orderStatus] || selectedOrder.orderStatus}</div></div><div><div className="text-neutral-400">PAYMENT</div><div>{selectedOrder.paymentStatus}</div></div><div><div className="text-neutral-400">METHOD</div><div>{selectedOrder.paymentMethodName || "—"}</div></div><div><div className="text-neutral-400">DELIVERY</div><div>{selectedOrder.courierName || "—"}</div></div></div>
+              <div className="border-t pt-3"><div className="font-semibold mb-2">ITEMS</div>{selectedOrder.items.map((item) => { const review = getReviewForOrderItem(selectedOrder._id, item.productId); return <div key={`${item.productId}-${item.quantity}`} className="py-2 border-b last:border-0 flex items-start justify-between gap-3"><div><div>{item.quantity} × {item.productName}</div><div className="text-[11px] text-neutral-400">{formatCurrency(item.unitPrice)} each</div>{review ? <div className="text-[10px] text-neutral-500 mt-1">Reviewed • {review.rating}/5</div> : <button type="button" onClick={() => setReviewState({ order: selectedOrder, productId: item.productId, productName: item.productName })} className="text-[10px] underline mt-1 inline-flex items-center gap-1"><MessageSquare size={10} /> Write review</button>}</div><div className="font-flex tabular-nums">{formatCurrency(item.subtotal)}</div></div>; })}</div>
+              <div className="space-y-1 text-xs border-t pt-3"><div className="flex justify-between"><span>Subtotal</span><span className="font-flex">{formatCurrency(selectedOrder.subtotal)}</span></div><div className="flex justify-between"><span>Discount</span><span className="font-flex">-{formatCurrency(selectedOrder.discount)}</span></div><div className="flex justify-between"><span>Delivery</span><span className="font-flex">{formatCurrency(selectedOrder.deliveryFee)}</span></div><div className="flex justify-between text-base font-bold pt-1"><span>Total</span><span className="font-flex">{formatCurrency(selectedOrder.total)}</span></div></div>
+              <div className="border-t pt-3 text-xs"><div className="font-semibold">DELIVER TO</div><div className="mt-1">{selectedOrder.receiverName}</div><div>{selectedOrder.contactNumber}</div><div className="text-neutral-500">{selectedOrder.deliveryAddress}</div></div>
+              <div className="flex gap-2 pt-2"><button type="button" onClick={() => setReceiptOrder(selectedOrder)} className="flex-1 border border-black rounded-lg py-2 text-xs font-semibold inline-flex items-center justify-center gap-1.5"><Download size={13} /> DOWNLOAD RECEIPT</button><button type="button" onClick={() => setSelectedOrder(null)} className="px-4 border rounded-lg py-2 text-xs">CLOSE</button></div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {receiptOrder && (
+        <div className="fixed inset-0 z-[60] bg-black/60 p-3 flex items-end sm:items-center justify-center" onClick={() => setReceiptOrder(null)}>
+          <div className="w-full max-w-md bg-white rounded-2xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
+            <div className="px-4 py-3 border-b flex items-center justify-between"><div><div className="font-semibold">DOWNLOAD RECEIPT</div><div className="font-flex text-[11px] text-neutral-400">#{receiptOrder.orderNumber}</div></div><button type="button" onClick={() => setReceiptOrder(null)}><X size={18} /></button></div>
+            <div className="p-4"><div className="border rounded-xl p-4 text-xs space-y-2"><div className="font-bold text-base">PRIME™ TRANSACTION RECEIPT</div><div className="text-neutral-500">Order #{receiptOrder.orderNumber}</div><div className="border-t pt-2">{receiptOrder.items.map(i => <div key={`${i.productId}-${i.quantity}`} className="flex justify-between py-1"><span>{i.quantity} × {i.productName}</span><span className="font-flex">{formatCurrency(i.subtotal)}</span></div>)}</div><div className="border-t pt-2 flex justify-between font-bold"><span>Total</span><span className="font-flex">{formatCurrency(receiptOrder.total)}</span></div></div><div className="flex gap-2 mt-3"><button type="button" onClick={() => downloadReceipt(receiptOrder)} className="flex-1 bg-black text-white rounded-lg py-2 text-xs inline-flex items-center justify-center gap-1.5"><Download size={13} /> DOWNLOAD HTML COPY</button><button type="button" onClick={() => window.print()} className="border rounded-lg px-4 py-2 text-xs inline-flex items-center gap-1.5"><Printer size={13} /> PRINT</button></div></div>
+          </div>
+        </div>
+      )}
+
+      {reviewState && <ProductReviewModal isOpen={true} onClose={() => setReviewState(null)} productId={reviewState.productId} productName={reviewState.productName} orderId={reviewState.order._id} orderNumber={reviewState.order.orderNumber} userId={customer?.telegramUserId || ""} userName={customer?.telegramDisplayName || ""} existingReview={getReviewForOrderItem(reviewState.order._id, reviewState.productId)} />}
     </div>
   );
 }
-
